@@ -1,13 +1,13 @@
-package com.example.fisrtproject.controller;
+package com.example.firstproject.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
-@Controller
+@Controller // 컨트롤러 선언(annotaion)
 public class SecondController {
-    @GetMapping("/random-quote")
-    public String randomQuote(Model model){
+    @GetMapping("/random-quote") // URL을 맵핑함(http://localhost:8080/random-quote)
+    public String randomQuote(Model model){ // 모델객체 받아오기
         String[] quotes ={
                 "행복은 습관이다. 그것을 몸에 지니라. " +
                         "-허버드-",
@@ -21,7 +21,7 @@ public class SecondController {
                         "-데모스테네스-"
         };
         int randInt = (int) (Math.random() * quotes.length);
-        model.addAttribute("randomQuote",quotes[randInt]);
-        return "quote";
+        model.addAttribute("randomQuote",quotes[randInt]); // randomQuote : 변수명(attributeName)
+        return "quote"; // quote.mustache 파일을 반환함
     }
 }
