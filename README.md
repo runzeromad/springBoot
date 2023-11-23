@@ -282,15 +282,117 @@ springBoot
        ```
 
 7. 셀프체크 </br>
-   * templates/quote.mustache </br>
+   * 뷰 : templates/members/new.mustache </br>
      ```html
-
+      {{>layouts/header}}
+      <form class="container" action="/join" method="post">
+          <div class="mb-3">
+              <label class="form-label">이메일</label>
+              <input type="email" class="form-control" name="email">
+          </div>
+          <div class="mb-3">
+              <label class="form-label">비밀번호</label>
+              <input type="password" class="form-control" name="password">
+          </div>
+          <button type="submit" class="btn btn-primary">Submit</button>
+          <a href="/members">back</a>
+      </form>
+      {{>layouts/footer}} 
      ```      
-   * controller/SecondController.java </br>
+   * 컨트롤러 : controller/MemberController.java </br>
        ```java
+         @Controller
+         public class MemberController {
+            @Autowired // 스프링 부트가 미리 생성해 놓은 리파지터리 객체 주입
+            private MemberRepository memberRepository;  // memberRepository 객체 선언
+            @GetMapping("/members/new")
+            public String newMembersForm(){
+                return "members/new";
+            }
+
+            @PostMapping("/join") // post방식 데이터 전송경로 맵핑
+            public String createMemberForm(MemberForm form){
+                System.out.println(form.toString());
+         
+                Member member = form.toEntity();
+                System.out.println(member.toString());
+         
+                Member saved = memberRepository.save(member);
+                System.out.println(saved.toString());
+     
+                return "";
+             }
+         }
+       ```
+
+   * DTO : dto/MemberForm.java </br>
+       ```java
+        public class MemberForm { // DTO(data Transfer Object)폼데이터를 받아 담는 그릇
+            private String email;
+            private String password;
+
+            // Constructor
+            public MemberForm(String email, String password) { // 전송받은 제목과 내용 저장 하는 생성자
+                this.email = email;
+                this.password = password;
+            }
+
+            // toString()
+            @Override
+            public String toString() { // 데이터를 잘 받았는지 확인할 메서드
+
+            return "MemberForm{" +
+                "email='" + email + '\'' +
+                ", password='" + password + '\'' +
+                '}';
+            }
+
+            public Member toEntity() { // DTO객체를 엔티티로 반환
+                return new Member(null, email, password);
+            }
+        }
 
        ```
 
+   * 엔티티 : entity/Member.java </br>
+       ```java
+          @Entity
+          public class Member {
+            @Id
+            @GeneratedValue
+            private Long id;
+
+            @Column
+            private String email;
+
+            @Column
+            private String password;
+
+            // Article 생성자 추가
+            public Member(Long id, String email, String password) {
+                this.id = id;
+                this.email = email;
+                this.password = password;
+            }
+
+            // toString() 메서드 추가
+            @Override
+            public String toString() {
+                return "Member{" +
+                        "id=" + id +
+                        ", email='" + email + '\'' +
+                        ", password='" + password + '\'' +
+                        '}';
+            }
+          }     
+       ```
+
+   * 리퍼지토리 : repository/MemberRepository.java </br>
+       ```java
+          public interface MemberRepository extends CrudRepository <Member, Long>{
+
+          }
+       ```
 
 > Day 03 정리
 >1. DTO
