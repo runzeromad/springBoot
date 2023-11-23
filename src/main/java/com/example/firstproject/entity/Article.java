@@ -5,9 +5,11 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @AllArgsConstructor  // title와 content를 저장하는 생성자가 자동으로 생성됨 (lombok의 어노테이션)
+@NoArgsConstructor // 기본생성자 추가 어노테이션
 @ToString
 @Entity
 public class Article {
@@ -40,5 +42,12 @@ public class Article {
                 ", content='" + content + '\'' +
                 '}';
     }
+
+    // @NoArgsConstructor로 대처됨
+    // 기본 생성자 코드
+    Article(){
+
+    }
+
      */
 }
