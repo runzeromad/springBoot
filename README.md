@@ -401,14 +401,97 @@ springBoot
 >   * 로직을 가지지 않는 순수한 데이터 객체(getter & setter 만 가진 클래스)
 >   * <b>DTO는 데이터 전달만을 위한 객체가 핵심<b>이며 이외의 비지니스 로직은 굳이 들어갈 필요가 없음</br></br>
 >2. 폼데이터를 DTO로 받는 과정 </br>
->   <img src="./src/main/resources/static/img/2023-11-22_day03_01.jpg" width="400px" alt="springBootProject"></img> </br></br>
+    <img src="./src/main/resources/static/img/2023-11-22_day03_01.jpg" width="400px" alt="springBootProject"></img> </br></br>
 >3. JPA(Java Persistence API)
 >   * 자바 언어로 DB에 명령을 내리게 하는 도구(데이터를 객체 지향적으로 관리하도록 도와줌)
 >   * Entity : 자바 객체를 DB가 이해할 수 있게 만든것(<b>이를 기반으로 테이블이 만들어짐</b>)  
 >   * Repository : 엔티티가 DB속 테이블에 CRUD(저장 및 관리) 할수 있게 하는 인터 페이스</br></br>
 >4. DTO를 DB에 저장하는 과정 
->  DTO를 엔티티로 변환 후 리파지터리를 이용해 엔티티를 DB에 저장</br>
->   <img src="./src/main/resources/static/img/2023-11-22_day03_02.jpg" width="400px" alt="springBootProject"></img> </br></br>
+>   DTO를 엔티티로 변환 후 리파지터리를 이용해 엔티티를 DB에 저장</br>
+    <img src="./src/main/resources/static/img/2023-11-22_day03_02.jpg" width="400px" alt="springBootProject"></img> </br></br>
 >5. 의존성 주입
 >   * 외부에서 만들어진 객체를 필요한 곳으로 가져오는 기법(스프링 부트는 @Autowired 어노테이션을 사용) </br></br>
 
+----------------
+### 4. JavaStudy Day 04 (lombok)
+> Day 04 정리
+> 1. 록봄(lombok) : 코드를 간소화해주는 라이브 러리 </br>
+     <img src="./src/main/resources/static/img/2023-11-24_day04_01.jpg" width="400px" alt="springBootProject"></img> </br>
+>   * @AllArgsConstructor : 클래스 안쪽의 모든 필드를 매개변수로 하는 생성자를 만드는 어노테이션으로, 이를 사용하면 클랫 내에 별도의 생성자를 만들지 않아도 된다 </br></br>
+>   * @ToString : toStrong() 메서드를 사용하는 효과와 동일, 별도의 toStrong() 메서드를 사용하지 않아도 된다. </br></br>
+>   * @Slf4j : 로깅기능 사용 log.info(); 형식으로 사용한다 </br>
+----------------
+### 5. JavaStudy Day 05 (Read)
+1. 데이터 조회 과정 </br>
+   <img src="./src/main/resources/static/img/2023-11-24_day04_02.jpg" width="500px" alt="springBootProject"></img>
+   </br></br>
+2. 컨트롤러에 URL요청 </br>
+   <img src="./src/main/resources/static/img/2023-11-24_day04_03.jpg" width="500px" alt="springBootProject"></img>
+   </br></br>
+3. 리파지터리로 데이터 가져오기 </br>
+   <img src="./src/main/resources/static/img/2023-11-24_day04_04.jpg" width="500px" alt="springBootProject"></img>
+   </br></br>
+4. 모델에 데이터 등록하기 </br>
+   <img src="./src/main/resources/static/img/2023-11-24_day04_05.jpg" width="500px" alt="springBootProject"></img>
+   </br></br>
+5. 뷰 페이지 반환하기 </br>
+   <img src="./src/main/resources/static/img/2023-11-24_day04_06.jpg" width="500px" alt="springBootProject"></img>
+   </br></br>
+6. 데이터 조회 실습으로 본 MVC, JPA, DB의 상호작용 </br>
+   <img src="./src/main/resources/static/img/2023-11-24_day04_07.jpg" width="500px" alt="springBootProject"></img>
+   </br></br> 
+7. 데이터 목록 조회하기 </br>
+   <img src="./src/main/resources/static/img/2023-11-24_day04_08.jpg" width="500px" alt="springBootProject"></img>
+   </br></br>
+8. 소스코드
+
+   1. 컨트롤러
+       * controller/ArticlesController.java </br>
+          ```java
+           @Slf4j
+           @Controller
+           public class ArticleController {
+                @Autowired
+                private ArticleRepository articleRepository;
+
+                @GetMapping("/articles/new")
+                public String newArticleForm() {
+                    return "articles/new";
+                }
+
+                @PostMapping("/articles/create")
+                public String createArticle(ArticleForm form) {
+                    log.info(form.toString());
+                    // 1. DTO를 엔티티로 변환
+                    Article article = form.toEntity();
+                    log.info(article.toString());
+
+                    // 2. 리파지터리로 엔티티를 DB에 저장
+                    Article saved = articleRepository.save(article);
+                    log.info(saved.toString());
+                    return "";
+                }
+
+                @GetMapping("/articles/{id}") // 데이터 조회 요청 접수
+                public String show(@PathVariable Long id, Model model) { // 매개변수로 id 받아오기
+                    log.info("id = " + id); // id를 잘 받았는지 확인하는 로그 찍기
+                    // 1. id를 조회하여 데이터 가져오기
+                    Article articleEntity = articleRepository.findById(id).orElse(null);
+                    // 2. 모델에 데이터 등록하기
+                    model.addAttribute("article", articleEntity);
+                    // 3. 뷰 페이지 반환하기
+                    return "articles/show";
+                }
+
+                @GetMapping("/articles")
+                public String index(Model model) {
+                    // 1. 모든 데이터 가져오기
+                    List<Article> articleEntityList = articleRepository.findAll();
+                    // 2. 모델에 데이터 등록하기
+                    model.addAttribute("articleList", articleEntityList);
+                    // 3. 뷰 페이지 설정하기
+                    return "articles/index";
+                }
+         }
+
+          ```
