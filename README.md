@@ -444,54 +444,177 @@ springBoot
    <img src="./src/main/resources/static/img/2023-11-24_day04_08.jpg" width="500px" alt="springBootProject"></img>
    </br></br>
 8. 소스코드
+   * controller/ArticlesController.java </br>
+       
+      ```java
+     @Slf4j
+     @Controller
+     public class ArticleController {
+          @Autowired
+          private ArticleRepository articleRepository;
 
-   1. 컨트롤러
-       * controller/ArticlesController.java </br>
-          ```java
-           @Slf4j
-           @Controller
-           public class ArticleController {
-                @Autowired
-                private ArticleRepository articleRepository;
+          @GetMapping("/articles/new")
+          public String newArticleForm() {
+          return "articles/new";
+          }
 
-                @GetMapping("/articles/new")
-                public String newArticleForm() {
-                    return "articles/new";
-                }
+          @PostMapping("/articles/create")
+          public String createArticle(ArticleForm form) {
+            log.info(form.toString());
+            // 1. DTO를 엔티티로 변환
+            Article article = form.toEntity();
+            log.info(article.toString());
 
-                @PostMapping("/articles/create")
-                public String createArticle(ArticleForm form) {
-                    log.info(form.toString());
-                    // 1. DTO를 엔티티로 변환
-                    Article article = form.toEntity();
-                    log.info(article.toString());
+            // 2. 리파지터리로 엔티티를 DB에 저장
+            Article saved = articleRepository.save(article);
+            log.info(saved.toString());
+            return "";
+          }
 
-                    // 2. 리파지터리로 엔티티를 DB에 저장
-                    Article saved = articleRepository.save(article);
-                    log.info(saved.toString());
-                    return "";
-                }
+          @GetMapping("/articles/{id}") // 조회 데이터 URL 맵핑
+          // show 메서드
+          public String show(@PathVariable Long id, Model model) { // 매개변수로 id 받아오기
+              // @PathVariable : URL요청으로 들어온 전달값을 컨트롤러의 매개변수로 가져오는 어노테이션
+          
+              // 1. id를 조회하여 데이터 가져오기
+              Article articleEntity = articleRepository.findById(id).orElse(null);
+              /*
+              findById() : JPA의 CrudRepository가 제공하는 메서드로 특정 엔티티의 id값을 기준으로 데이터를 찾아 Optional 타입으로 반환
+                           DB에 저장된 데이터를 id로 조회할때 findById()메서드를 사용
+              orElse(null) : id값으로 데이터를 찾을 때 id값이 없을 경우 null을 반환                                        
+              */
 
-                @GetMapping("/articles/{id}") // 데이터 조회 요청 접수
-                public String show(@PathVariable Long id, Model model) { // 매개변수로 id 받아오기
-                    log.info("id = " + id); // id를 잘 받았는지 확인하는 로그 찍기
-                    // 1. id를 조회하여 데이터 가져오기
-                    Article articleEntity = articleRepository.findById(id).orElse(null);
-                    // 2. 모델에 데이터 등록하기
-                    model.addAttribute("article", articleEntity);
-                    // 3. 뷰 페이지 반환하기
-                    return "articles/show";
-                }
+              // 2. 모델에 데이터 등록하기
+              model.addAttribute("article", articleEntity);
+              /*
+              article이라는 이름으로 articleEntity 객체 추가
+              model.addAttribute(String name , Object value); : 형태임
+              */
 
-                @GetMapping("/articles")
-                public String index(Model model) {
-                    // 1. 모든 데이터 가져오기
-                    List<Article> articleEntityList = articleRepository.findAll();
-                    // 2. 모델에 데이터 등록하기
-                    model.addAttribute("articleList", articleEntityList);
-                    // 3. 뷰 페이지 설정하기
-                    return "articles/index";
-                }
-         }
+              // 3. 뷰 페이지 반환하기
+              return "articles/show";
+          }
 
-          ```
+          @GetMapping("/articles")
+          // index 메서드
+          public String index(Model model) {
+              // 1. 모든 데이터 가져오기
+              List<Article> articleEntityList = articleRepository.findAll();
+              /*
+              findAll() : 레파지터리에서 모든 데이터를 가겨오는 메서드
+                          이소스에서는 findAll() 메서드가 Iterable가 아닌 ArrayList를 반환하도록 articleRepository에서 findAll()을 Override하여 수정하였음
+              */
+     
+              // 2. 모델에 데이터 등록하기
+              model.addAttribute("articleList", articleEntityList); // 모델 객체 받아오기
+
+              // 3. 뷰 페이지 반환
+              return "articles/index";
+          }
+     }
+      ```
+
+   * entity/Article.java </br>
+
+      ```java
+     @AllArgsConstructor
+     @NoArgsConstructor // 기본 생성자를 추가해주는 어노테이션
+     @ToString
+     @Entity
+     public class Article {
+        @Id
+        @GeneratedValue
+        private Long id;
+
+        @Column
+        private String title;
+
+        @Column
+        private String content;
+
+     }
+      ```   
+
+   * repository/ArticleRepository.java
+      ```java
+      public interface ArticleRepository extends CrudRepository<Article, Long> {
+        @Override
+        ArrayList<Article> findAll(); // Iterable → ArrayList 수정
+      }     
+      ```
+   * templates/articles/show.mustache
+      ```html
+     {{>layouts/header}}
+     
+        <table class="table">
+            <thead>
+            <tr>
+                <th scope="col">Id</th>
+                <th scope="col">Title</th>
+                <th scope="col">Content</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{#article}}
+            <tr>
+                <th>{{id}}</th>
+                <td>{{title}}</td>
+                <td>{{content}}</td>
+            </tr>
+            {{/article}}
+            </tbody>
+        </table>
+        
+        {{>layouts/footer}}   
+      ```
+   * templates/articles/index.mustache
+      ```html
+        {{>layouts/header}}
+        
+        <table class="table">
+            <thead>
+            <tr>
+                <th scope="col">Id</th>
+                <th scope="col">Title</th>
+                <th scope="col">Content</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{#articleList}}
+            <tr>
+                <th>{{id}}</th>
+                <td>{{title}}</td>
+                <td>{{content}}</td>
+            </tr>
+            {{/articleList}}
+            </tbody>
+        </table>
+        
+        {{>layouts/footer}}
+      ```
+
+> Day 05 정리
+> 1. 데이터 조회 과정 </br>
+>    1. 사용자가 웹페이지에 데이터 조회 URL요청
+>    2. 서버의 컨트롤러가 이 요청을 받아 해당 URL에서 찾으려는 데이터 정보(id)를 리파지터리에 전달
+>    3. 리파지터리는 정보(id)를 가지고 DB에 데이터 조회를 요청
+>    4. DB는 해당 데이터를 찾아 이를 엔티티로 반환
+>    5. 반환된 엔티티는 모델을 통해 뷰 템플릿으로 전달
+>    6. 최종 결과 뷰 페이지가 완성되 사용자 화면에 출력
+     <img src="./src/main/resources/static/img/2023-11-24_day04_09.jpg" width="500px" alt="springBootProject"></img> </br>
+     >   * @AllArgsConstructor : 클래스 안쪽의 모든 필드를 매개변수로 하는 생성자를 만드는 어노테이션으로, 이를 사용하면 클랫 내에 별도의 생성자를 만들지 않아도 된다 </br></br>
+> 2. @PathVariable
+>   * URL요청으로 들어온 전달값을 컨트롤러의 매개변수로 가져오는 어노테이션 </br> </br>
+> 3. findByid()
+>   * JPA의 CrudRepository가 제공하는 메서드로, 특정 엔티티의 id 값을 기준으로 데이터를 찾아 Optional 타입으로 반환함 </br> </br>
+> 4. findall()
+>   * JPA의 CrudRepository가 제공하는 메서드로, 특정 엔티티를 모두 가져와 Iterable 타입으로 반환함 </br> </br>
+> 5. {{#article}}{{/article}}
+>   * 뷰페이지에서 모델에 등록된 article의 사용 범위를 지정할 때 사용하는 머스테치 문법
+>   * {{#article}}부터 {{/article}}까지 범위 내에서 article 데이터를 사용할 수 있음 </br> </br>
+> 6. 반환 데이터 타입 불일치 문제 해결법
+>   * 특정 메서드가 반환하는 데이터 타입과 사용자가 작성한 반환 데이터 타입이 다를 경루 3가지 방법으로 해결가능
+>    1. 메서드가 반환하는 데이터 타입을 사용자가 작성한 데이터 타입으로 캐스팅(형변환)하기
+>    2. 사용자가 작성한 데이터 타입을 메서드가 반환하는 데이터 타입으로 수정하기
+>    3. 메서드의 반환 데이터 타입을 원하는 타입으로 오버라이딩 하기
+----------------     
