@@ -35,11 +35,11 @@ public class ArticleController {
         Article article = form.toEntity(); // toEntity() from객체를 엔티티 객체로 변환
         log.info(article.toString());
 
-        // 2. repository(레파지토리)로 entity(엔티티)를 저장
+        // 2. repository(레파지토리)로 entity(엔티티)를 DB에 저장
         Article saved = articleRepository.save(article); // article 엔티티를 저장해 saved 객체에 반환
         log.info(saved.toString());
 
-        return "";
+        return "redirect:/articles/" + saved.getId();
     }
 
 
