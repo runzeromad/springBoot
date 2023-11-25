@@ -54,7 +54,7 @@ springBoot
       </br></br>
 
 7. View Templete </br>
-    * templates/layouts/header.mustache </br>
+    * resources/templates/layouts/header.mustache </br>
       ```html
       <!doctype html>
       <html lang="en">
@@ -64,7 +64,7 @@ springBoot
          <meta name="viewport" content="width=device-width, initial-scale=1">
          (중략)
       ``` 
-   * templates/layouts/footer.mustache </br>
+   * resources/templates/layouts/footer.mustache </br>
      ```html
         <!-- site info -->
         <div class="mb-5 container-fluid">
@@ -73,7 +73,7 @@ springBoot
         </div>
         (중략)
      ```       
-   * templates/greetings.mustache </br>
+   * resources/templates/greetings.mustache </br>
        ```html
        {{>layouts/header}}
        <!-- content -->
@@ -82,7 +82,7 @@ springBoot
        </div>
        {{>layouts/footer}}
        ```
-   * templates/goodbye.mustache </br>
+   * resources/templates/goodbye.mustache </br>
        ```html
        {{>layouts/header}}
        <div class="bg-dark text-white p-5">
@@ -91,7 +91,7 @@ springBoot
        {{>layouts/footer}}
        ```
 8. 셀프체크 </br>
-    * templates/quote.mustache </br>
+    * resources/templates/quote.mustache </br>
       ```html
       {{>layouts/header}}
       <div class="bg-dark text-white p-5">
@@ -151,7 +151,7 @@ springBoot
 ### 3. JavaStudy Day 03 (CRUD)
 1. 폼 < form > 태그에 실어 보낸 데이터를 서버의 컨트롤러가 객체(DTO : Data Transfer Object)에 담음 </br></br>
 2. 입력폼 만들기
-   * templates/articles/new.mustache </br>
+   * resources/templates/articles/new.mustache </br>
      ```html
      {{>layouts/header}}
      <form class="container" action="/articles/create" method="post">
@@ -282,7 +282,7 @@ springBoot
        ```
 
 7. 셀프체크 </br>
-   * 뷰 : templates/members/new.mustache </br>
+   * 뷰 : resources/templates/members/new.mustache </br>
      ```html
       {{>layouts/header}}
       <form class="container" action="/join" method="post">
@@ -542,7 +542,7 @@ springBoot
         ArrayList<Article> findAll(); // Iterable → ArrayList 수정
       }     
       ```
-   * templates/articles/show.mustache
+   * resources/templates/articles/show.mustache
       ```html
      {{>layouts/header}}
      
@@ -567,7 +567,7 @@ springBoot
         
         {{>layouts/footer}}   
       ```
-   * templates/articles/index.mustache
+   * resources/templates/articles/index.mustache
       ```html
         {{>layouts/header}}
         
@@ -592,6 +592,33 @@ springBoot
         
         {{>layouts/footer}}
       ```
+9. 셀프체크 </br>
+    * 컨트롤러 : controller/MemberController.java </br> 
+    ````java
+    // VIEW
+    @GetMapping("/members/{id}")
+    public String show(@PathVariable Long id, Model model){
+        log.info("id : " + id); // id 확인
+
+        // 1. id 조회해서 데이터 가져오기
+        Member memberEntity = memberRepository.findById(id).orElse(null);
+        // 2. 모델에 데이터 등록하기
+        model.addAttribute("member", memberEntity);
+        // 뷰페이지 반환
+        return "members/show";
+    }
+
+    // LIST
+    @GetMapping("/members")
+    public String index(Model model){
+        // 1. DB에서 모든 데이터 가져오기
+        List<Member> memberEntityList = memberRepository.findAll();
+        // 2. 모델에 데이터 등록하기
+        model.addAttribute("memberList", memberEntityList);
+        // 3. 사용자에게 보여줄 뷰 페이지 반환하기
+        return "members/index";
+    }
+    ````
 
 > Day 05 정리
 > 1. 데이터 조회 과정 </br>
@@ -618,3 +645,139 @@ springBoot
 >    2. 사용자가 작성한 데이터 타입을 메서드가 반환하는 데이터 타입으로 수정하기
 >    3. 메서드의 반환 데이터 타입을 원하는 타입으로 오버라이딩 하기
 ----------------     
+### 6. 링크와 다이렉트 day 06
+1. 셀프체크 </br>
+    * 컨트롤러 : controller/MemberController.java </br>
+      ````java
+      @Slf4j
+      @Controller
+      public class MemberController {
+           @Autowired // 스프링 부트가 미리 생성해 놓은 리파지터리 객체 주입
+           private MemberRepository memberRepository;  // memberRepository 객체 선언
+           // Write
+           @GetMapping("/members/new")
+           public String newMembersForm(){
+                return "members/new";
+           }
+   
+           // Insert
+           @PostMapping("/join") // post방식 데이터 전송 맵핑
+           public String createMemberForm(MemberForm form){
+               log.info(form.toString());
+       
+               Member member = form.toEntity();
+               log.info(member.toString());
+       
+               Member saved = memberRepository.save(member);
+               log.info(saved.toString());
+       
+               return "redirect:/members/" + saved.getId();
+           }
+   
+           // VIEW
+           @GetMapping("/members/{id}")
+           public String show(@PathVariable Long id, Model model){
+               log.info("id : " + id);
+               // 1. id 조회해서 데이터 가져오기
+               Member memberEntity = memberRepository.findById(id).orElse(null);
+               // 2. 모델에 데이터 등록하기
+               model.addAttribute("member", memberEntity);
+               // 뷰페이지 반환
+               return "members/show";
+           }
+   
+           // LIST
+           @GetMapping("/members")
+           public String index(Model model){
+               // 1. DB에서 모든 데이터 가져오기
+               List<Member> memberEntityList = memberRepository.findAll();
+               // 2. 모델에 데이터 등록하기
+               model.addAttribute("memberList", memberEntityList);
+               // 3. 사용자에게 보여줄 뷰 페이지 반환하기
+               return "members/index";
+           }
+      }   
+      ````
+    * 엔티티 : /entity/Member.java </br>
+      ````java
+        @AllArgsConstructor // title와 content를 저장하는 생성자가 자동으로 생성됨 (lombok의 어노테이션)
+        @NoArgsConstructor // 기본생성자 추가 어노테이션
+        @ToString
+        @Entity
+        @Getter // 외부에서 객체의 데이터를 읽을 때 사용하는 어노테이션
+        public class Member {
+        @Id
+        @GeneratedValue
+        private Long id;
+    
+        @Column
+        private String email;
+    
+        @Column
+        private String password;
+    
+        }   
+      ````
+    * 리파지터리 : /repository/MemberRepository.java </br>
+      ````java
+      import java.util.ArrayList; // ArrayList import
+    
+      public interface MemberRepository extends CrudRepository <Member, Long>{  // CrudRepository 부모 -> ArticleRepository 자식 상속(extends)관계
+      @Override
+        ArrayList<Member> findAll(); // ArrayList를 override 해줌
+      }
+      ````
+   *  view Templete : resources/templates/members/index.mustache </br>
+      ```html
+       {{>layouts/header}}
+       <table class="table">
+           <thead>
+           <tr>
+               <th scope="col">Id</th>
+               <th scope="col">email</th>
+               <th scope="col">password</th>
+           </tr>
+           </thead>
+           <tbody>
+           {{#memberList}}
+           <tr>
+               <th><a href="/members/{{id}}">{{id}}</a></th>
+               <td>{{email}}</td>
+               <td>{{password}}</td>
+           </tr>
+           {{/memberList}}
+           </tbody>
+       </table>
+       <a href="/members/new">New members</a>
+       {{>layouts/footer}}
+      ```
+   *  view Templete : resources/templates/members/index.mustache </br>
+      ```html
+      {{>layouts/header}}
+      <table class="table">
+          <thead>
+          <tr>
+              <th scope="col">Id</th>
+              <th scope="col">email</th>
+              <th scope="col">password</th>
+          </tr>
+          </thead>
+          <tbody>
+          {{#member}}
+          <tr>
+              <th>{{id}}</th>
+              <td>{{email}}</td>
+              <td>{{password}}</td>
+          </tr>
+          {{/member}}
+          </tbody>
+      </table>
+      <a href="/members">GO to Member List</a>
+      {{>layouts/footer}}      
+      ```
+> Day 06 정리
+> 1. 링크
+>   * HTML의 `<a>` 태그 혹은 `<form>` 태그로 작성
+> 2. 리다이렉트
+>   * 클라이언트가 보낸 요청을 마친 후 계속해서 처리할 다음 요청 주소를 재지시하는 것
+----------------
