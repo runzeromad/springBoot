@@ -966,6 +966,74 @@ springBoot
 > 1. 데이터 수정 1단계
 >   * 수정페이지를 만들고 기존 데이터를 불러온다
       <img src="./src/main/resources/static/img/2023-11-27_day07_08.png" width="500px" alt="springBootProject"></img></br></br>
-> 2. 데이터 수정 1단계
+> 2. 데이터 수정 2단계
 >   * 데이터를 수정해 DB에 반영한 후 결과를 볼 수 있게 상세 페이지로 리다이렉트 한다
       <img src="./src/main/resources/static/img/2023-11-27_day07_09.png" width="500px" alt="springBootProject"></img></br></br> 
+
+### 8. JavaStudy Day 08 (delete)
+1. 데이터 삭제과정 </br>
+   <img src="./src/main/resources/static/img/2023-11-27_day08_01.png" width="500px" alt="springBootProject"></img></br>
+   클라이언트가 삭제요청 > 삭제 요청 받은 컨트롤러는 리파지터리를 통애 Db에 저장된 데이터를 찾아 삭제 > 삭제 완료 시 결과 페이지로 리다이렉트
+* RedirectAttributes : 리다이렉트시 결과값(삭제 완료 메시지)을 띄워주기 위해 사용하는 클래스 
+* addFlashAttribute() : RedirectAttributes객체의 메서드로 리다이렉트된 페이지에서 사용할 일회성 데이터를 등록할수 있음</br>
+* RedirectAttributes</br>
+  <img src="./src/main/resources/static/img/2023-11-27_day08_02.png" width="500px" alt="springBootProject"></img></br></br>
+2. 소스코드
+    * controller/ArticlesController.java </br>
+       ```java
+       // DELETE
+       @GetMapping("articles/{id}/delete")
+       public String delete(@PathVariable Long id, RedirectAttributes rttr){ // id만 존재하면 된다
+      
+            Article target = articleRepository.findById(id).orElse(null);
+      
+            if(target != null){
+                articleRepository.delete(target);
+                rttr.addFlashAttribute("msg","삭제됐습니다.");
+            };
+    
+            return "redirect:/articles";
+       }
+       ```
+
+    *  view Templete : resources/templates/articles/show.mustache </br>
+       ```html
+       <a href="/articles/{{article.id}}/delete" class="btn btn-danger">Delete</a>
+       ```      
+   *  view Templete : resources/templates/layouts/header.mustache </br>
+       ```html
+       {{#msg}} <!--msg 시작부분-->
+            <div class="alert alert-primary alert-dismissible">
+       {{msg}} <!--메세지 출력 부분-->
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="close"></button>
+            </div>
+       {{/msg}} <!-- //msg 끝부분-->
+       ```
+3. 셀프 체크
+    * controller/MembersController.java </br>
+       ```java
+       // DELETE
+       @GetMapping("/members/{id}/delete")
+       public String delete(@PathVariable Long id, RedirectAttributes rttr){
+            Member target = memberRepository.findById(id).orElse(null);
+            if(target != null){
+                memberRepository.delete(target);
+                rttr.addFlashAttribute("msg", "삭제됐습니다.");
+            }
+            return "redirect:/members";
+       }
+       ```
+    *  view Templete : resources/templates/members/show.mustache </br>
+       ```html
+       <a href="/articles/{{member.id}}/delete" class="btn btn-danger">Delete</a>
+       ```      
+
+> Day 08 정리
+> 1. 데이터 삭제 과정
+     >   * 클라이언트가 삭제 요청을 하면 서버는 DB에서 해당 데이터를 찾아 삭제하고, </br>
+           클라이언트를 리다이렉트된 페이지로 보낸다 </br>
+           <img src="./src/main/resources/static/img/2023-11-27_day08_01.png" width="500px" alt="springBootProject"></img></br></br>
+> 2. RedirectAttributes
+     >   * 리다이렉트 페이지에서 사용할 일회성 데이터를 관리하는 객체로 이 객체의 </br>
+           addFlashAttribute() 메서드로 리다이렉트된 페이지에서 사용할 일회성 데이터를 담을수 있다
+           <img src="./src/main/resources/static/img/2023-11-27_day08_02.png" width="500px" alt="springBootProject"></img></br></br>           
