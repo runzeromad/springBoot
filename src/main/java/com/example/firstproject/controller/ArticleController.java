@@ -17,7 +17,7 @@ import java.util.List;
 @Controller
 public class ArticleController {
     @Autowired // 스프링 부트가 미리 생성해 놓은 리파지터리 객체 주입
-    private ArticleRepository articleRepository;  // articleRepository 객체 선언
+    private ArticleRepository articleRepository;  // articleRepository 객체 선언 private 임으로 articleRepository는 ArticleController 클래스에서만 사용 가능하다
 
     // Write
     @GetMapping("/articles/new")
@@ -39,7 +39,7 @@ public class ArticleController {
         Article saved = articleRepository.save(article); // article 엔티티를 저장해 saved 객체에 반환
         log.info(saved.toString());
 
-        return "redirect:/articles/" + saved.getId();
+        return "redirect:" + saved.getId(); // 리다이렉트 주소 반환
     }
 
 
@@ -52,8 +52,8 @@ public class ArticleController {
         // 1. id 조회해서 데이터 가져오기
         Article articleEntity = articleRepository.findById(id).orElse(null); // orElse(null) : id값이 없을경우 null을 반환한다는 의미
 
-        // 2. 모델에 데이터 등록하기
-        model.addAttribute("article", articleEntity);
+        // 2. 모델에 데이터 등록하기 (model 객체 : 생성한 데이터를 담아서 View로 전달할 때 사용하는 객체) / (articleEntity데이터를 View로 전달)
+        model.addAttribute("article", articleEntity); // attributeName의 "article"는 articles/show.mustache파일에서 사용됨
 
         // 3. 뷰 페이지에 반환하기
         return "articles/show";
@@ -67,8 +67,35 @@ public class ArticleController {
         // List가 ArrayList의 상위 타입 임으로 위와 같이 해도 상관은 없다 / 정확한 표현은 -> ArrayList<Article> articleEntityList = articleRepository.findAll();
 
         // 2. 모델에 데이터 등록하기
-        model.addAttribute("articleList", articleEntityList);
+        model.addAttribute("articleList", articleEntityList); // attributeName의 articleList는 articles/index.mustache파일에서 사용됨
         // 3. 사용자에게 보여 줄 뷰 페이지 반환 하기
         return "articles/index";
     }
+
+    // EDIT VIEW
+    @GetMapping("articles/{id}/edit")
+    public String edit(@PathVariable Long id, Model model){
+        // 1. 수정할 데이터 가져오기
+        Article articleEntity = articleRepository.findById(id).orElse(null); // 레파지터리에서 id로 DB테이블을 조회하여 데이터를 가져온 후 엔티티의 변수(articleEntity)에 담는다
+        // 2. 모델에 데이터 담기
+        model.addAttribute("article", articleEntity);
+
+    return "articles/edit";
+    }
+
+    // UPDATE
+    @PostMapping("articles/update") // show.mustache의 form데이터의 action 경로
+    public String update(ArticleForm form){
+
+        // log.info(form.toString()); // form데이터 확인
+        Article articleEntity = form.toEntity();
+        Article target = articleRepository.findById(articleEntity.getId()).orElse(null);
+
+        if(target != null){
+            articleRepository.save(articleEntity);
+        }
+
+        return "redirect:/articles/" + articleEntity.getId();
+    }
+
 }
