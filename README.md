@@ -785,10 +785,10 @@ springBoot
 1. 데이터 수정 과정 </br>
    <img src="./src/main/resources/static/img/2023-11-27_day07_01.png" width="500px" alt="springBootProject"></img>
    <img src="./src/main/resources/static/img/2023-11-27_day07_02.png" width="500px" alt="springBootProject"></img>
-   * 뷰(상세) 페이지 Edit 클릭 > 컨트롤러 해당 글의 id로 DB데이터를 찾아 가져옴 > 컨트롤러는 가져온 데이터를</br> 
-     뷰에서 사용할수 있도록 모델에 담음 > 모델에 담겨진 데이터는 수정페이지에서 보여줌 </br> 
-   * 폼데이터(수정한 데이터)를 DTO에 담아 컨트롤러에서 받음 > DTO를 엔티티로 변환 > DB에서 데이터 갱신 > </br>
-     갱신된 데이터를 상세페이지로 리다이렉트
+   * 뷰(상세) 페이지 Edit 클릭 &rightarrow; 컨트롤러 해당 글의 id로 DB데이터를 찾아 가져옴</br> &rightarrow; 컨트롤러는 가져온 데이터를 
+     뷰에서 사용할수 있도록 모델에 담음 &rightarrow; 모델에</br> 담겨진 데이터는 수정페이지에서 보여줌 </br> 
+   * 폼데이터(수정한 데이터)를 DTO에 담아 컨트롤러에서 받음 &rightarrow; DTO를 엔티티로</br> 변환 &rightarrow; DB에서 데이터 갱신 &rightarrow;
+     갱신된 데이터를 상세페이지로 리다이렉트 </br></br>
 
 2. DB에 저장된 데이터를 가져와 수정 페이지에 출력하는 과정 요약
    <img src="./src/main/resources/static/img/2023-11-27_day07_03.png" width="500px" alt="springBootProject"></img></br></br>
@@ -969,11 +969,10 @@ springBoot
 > 2. 데이터 수정 2단계
 >   * 데이터를 수정해 DB에 반영한 후 결과를 볼 수 있게 상세 페이지로 리다이렉트 한다
       <img src="./src/main/resources/static/img/2023-11-27_day07_09.png" width="500px" alt="springBootProject"></img></br></br> 
-
 ### 8. JavaStudy Day 08 (delete)
 1. 데이터 삭제과정 </br>
    <img src="./src/main/resources/static/img/2023-11-27_day08_01.png" width="500px" alt="springBootProject"></img></br>
-   클라이언트가 삭제요청 > 삭제 요청 받은 컨트롤러는 리파지터리를 통애 Db에 저장된 데이터를 찾아 삭제 > 삭제 완료 시 결과 페이지로 리다이렉트
+   클라이언트가 삭제요청 &rightarrow; 삭제 요청 받은 컨트롤러는 리파지터리를 통애 Db에 저장된 데이터를 찾아 삭제 &rightarrow; 삭제 완료 시 결과 페이지로 리다이렉트
 * RedirectAttributes : 리다이렉트시 결과값(삭제 완료 메시지)을 띄워주기 위해 사용하는 클래스 
 * addFlashAttribute() : RedirectAttributes객체의 메서드로 리다이렉트된 페이지에서 사용할 일회성 데이터를 등록할수 있음</br>
 * RedirectAttributes</br>
@@ -1030,10 +1029,10 @@ springBoot
 
 > Day 08 정리
 > 1. 데이터 삭제 과정
-     >   * 클라이언트가 삭제 요청을 하면 서버는 DB에서 해당 데이터를 찾아 삭제하고, </br>
-           클라이언트를 리다이렉트된 페이지로 보낸다 </br>
-           <img src="./src/main/resources/static/img/2023-11-27_day08_01.png" width="500px" alt="springBootProject"></img></br></br>
+>   * 클라이언트가 삭제 요청을 하면 서버는 DB에서 해당 데이터를 찾아 삭제하고, </br>
+      클라이언트를 리다이렉트된 페이지로 보낸다 </br>
+      <img src="./src/main/resources/static/img/2023-11-27_day08_01.png" width="500px" alt="springBootProject"></img></br></br>
 > 2. RedirectAttributes
-     >   * 리다이렉트 페이지에서 사용할 일회성 데이터를 관리하는 객체로 이 객체의 </br>
-           addFlashAttribute() 메서드로 리다이렉트된 페이지에서 사용할 일회성 데이터를 담을수 있다
-           <img src="./src/main/resources/static/img/2023-11-27_day08_02.png" width="500px" alt="springBootProject"></img></br></br>           
+>   * 리다이렉트 페이지에서 사용할 일회성 데이터를 관리하는 객체로 이 객체의 </br>
+      addFlashAttribute() 메서드로 리다이렉트된 페이지에서 사용할 일회성 데이터를 담을수 있다
+      <img src="./src/main/resources/static/img/2023-11-27_day08_02.png" width="500px" alt="springBootProject"></img></br></br>           
