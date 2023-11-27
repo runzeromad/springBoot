@@ -191,7 +191,7 @@ springBoot
                 System.out.println(article.toString()); // DTO가 엔티티로 잘 변환되는지 출력
                 // 결과 : Article{id=null, title='제목', content='내용내용내용'}
 
-                // 2. repository(레파지토리)로 entity(엔티티)를 저장
+                // 2. repository(레파지터리)로 entity(엔티티)를 저장
                 Article saved = articleRepository.save(article); // article 엔티티를 저장해 saved 객체에 반환
                 System.out.println(saved.toString()); // article이 DB에 잘 저장되는지 출력
                 // 결과 Article{id=1, title='제목', content='내용내용내용'}
@@ -272,7 +272,7 @@ springBoot
 
        ```
 6. Repository 만들기
-    * repository(레파지터리) : 엔티티가 DB 속 테이블에 저장 및 관리 될 수있게 하는 인터페이스  </br>
+    * repository(리퍼지터리) : 엔티티가 DB 속 테이블에 저장 및 관리 될 수있게 하는 인터페이스  </br>
     * CrudRepository : JPA에서 제공하는 인터페이스로 이를 상속해 엔티티를 관리(CRUD) 할수 있다
     * repository/Articlerepository.java </br>
        ```java
@@ -501,7 +501,7 @@ springBoot
               // 1. 모든 데이터 가져오기
               List<Article> articleEntityList = articleRepository.findAll();
               /*
-              findAll() : 레파지터리에서 모든 데이터를 가겨오는 메서드
+              findAll() : 리퍼지터리에서 모든 데이터를 가겨오는 메서드
                           이소스에서는 findAll() 메서드가 Iterable가 아닌 ArrayList를 반환하도록 articleRepository에서 findAll()을 Override하여 수정하였음
               */
      
@@ -781,3 +781,191 @@ springBoot
 > 2. 리다이렉트
 >   * 클라이언트가 보낸 요청을 마친 후 계속해서 처리할 다음 요청 주소를 재지시하는 것
 ----------------
+### 7. JavaStudy Day 07 (update)
+1. 데이터 수정 과정 </br>
+   <img src="./src/main/resources/static/img/2023-11-27_day07_01.png" width="500px" alt="springBootProject"></img>
+   <img src="./src/main/resources/static/img/2023-11-27_day07_02.png" width="500px" alt="springBootProject"></img>
+   * 뷰(상세) 페이지 Edit 클릭 > 컨트롤러 해당 글의 id로 DB데이터를 찾아 가져옴 > 컨트롤러는 가져온 데이터를</br> 
+     뷰에서 사용할수 있도록 모델에 담음 > 모델에 담겨진 데이터는 수정페이지에서 보여줌 </br> 
+   * 폼데이터(수정한 데이터)를 DTO에 담아 컨트롤러에서 받음 > DTO를 엔티티로 변환 > DB에서 데이터 갱신 > </br>
+     갱신된 데이터를 상세페이지로 리다이렉트
+
+2. DB에 저장된 데이터를 가져와 수정 페이지에 출력하는 과정 요약
+   <img src="./src/main/resources/static/img/2023-11-27_day07_03.png" width="500px" alt="springBootProject"></img></br></br>
+
+3. 수정된 데이터 DB갱신 과정</br>
+   <img src="./src/main/resources/static/img/2023-11-27_day07_04.png" width="500px" alt="springBootProject"></img></br></br>
+4. 클라이언트-서버 간 데이터 처리를 위한 4가지 기술
+   <img src="./src/main/resources/static/img/2023-11-27_day07_05.png" width="500px" alt="springBootProject"></img></br></br> 
+5. CRUD를 위한 SQL 문과 HTTP 메서드
+
+   | 데이터 관리          | SQL    | HTTP       |
+   |-----------------|--------|------------|
+   | 데이터 생성 (Create) | INSERT | POST       |
+   | 데이터 조회 (Read)   | SELECT | GET        |
+   | 데이터 수정 (Update) | UPDATE | PATCH(PUT) |
+   | 데이터 삭제 (Delete) | DELETE | DELETE     |
+
+6. DB에 저장 된 기존 데이터가 갱신되는 과정</br>
+   <img src="./src/main/resources/static/img/2023-11-27_day07_06.png" width="500px" alt="springBootProject"></img></br></br>
+7. 상세 페이지로 리다이렉트하는 과정</br>
+   <img src="./src/main/resources/static/img/2023-11-27_day07_07.png" width="500px" alt="springBootProject"></img></br></br>
+9. 소스코드
+    * controller/ArticlesController.java </br>
+       ```java
+       // EDIT VIEW
+       @GetMapping("articles/{id}/edit") // URL 요청 접수
+       public String edit(@PathVariable Long id, Model model){ // 모델 객체 받아오기
+            // 1. 수정할 데이터 가져오기
+            Article articleEntity = articleRepository.findById(id).orElse(null); // DB에서 수정할 데이터 가져오기 : 리퍼지터리에서 id로 DB테이블을 조회하여 데이터를 가져온 후 엔티티의 변수(articleEntity)에 담는다
+            // 2. 모델에 데이터 담기
+            model.addAttribute("article", articleEntity);
+            // 3. 뷰 페이지 설정하기
+            return "articles/edit";
+       }      
+      
+       // UPDATE
+       @PostMapping("articles/update") // show.mustache의 form데이터의 action 경로
+       public String update(ArticleForm form){ // DTO받아오기(폼데이터)
+
+            // log.info(form.toString()); // form데이터 확인
+            Article articleEntity = form.toEntity(); // 폼데이터를 엔티티에 담아준다
+            Article target = articleRepository.findById(articleEntity.getId()).orElse(null); // 엔티티의 ID로 리퍼지터리에서 데이터를 검색하여 target에 담아줌
+
+            if(target != null){ // id가 존재할경우 데이터를 DB에 업데이트 해줌
+                articleRepository.save(articleEntity);
+            }
+
+            return "redirect:/articles/" + articleEntity.getId(); // 데이터 업데이트 후 갱신되는 페이지 반환
+       }      
+       ```
+    *  dto : dto/ArticleForm.java </br>
+       ````java
+        @AllArgsConstructor // title와 content를 저장하는 생성자가 자동으로 생성됨 (lombok의 어노테이션)
+        @ToString // toString() 효과
+        public class ArticleForm { // DTO(data Transfer Object)폼데이터를 받아 담는 그릇
+            private Long id; // 키값
+            private String title; // 제목받는 필드
+            private String content; // 내용 받는 필드
+        
+            /*
+            @AllArgsConstructor 대처됨
+            // Constructor
+            public ArticleForm(String title, String content) { // 전송받은 제목과 내용 저장 하는 생성자
+            this.title = title;
+            this.content = content;
+            }
+        
+            @ToString 으로 대처됨
+            // toString()
+            @Override
+            public String toString() { // 데이터를 잘 받았는지 확인할 메서드
+            // 출력 결과 ArticleForm{title='제목', content='내용내용내용'}
+            return "ArticleForm{" +
+            "title='" + title + '\'' +
+            ", content='" + content + '\'' +
+            '}';
+            }
+            */
+        
+            public Article toEntity() { // DTO객체를 엔티티로 반환
+            return new Article(id, title, content);
+            }
+        }     
+       ````
+
+    *  view Templete : resources/templates/articles /show.mustache </br>
+       ```html
+       <a href="/articles/{{article.id}}/edit" class="btn btn-primary">Edit</a>
+       ```      
+    *  view Templete : resources/templates/articles /edit.mustache </br>
+       ```html
+        {{>layouts/header}}
+ 
+        <form class="container" action="/articles/update" method="post">
+            <input name="id" type="hidden" value="{{id}}">
+            <div class="mb-3">
+                <label class="form-label">제목</label>
+                <input type="text" class="form-control" name="title" value="{{article.title}}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">내용</label>
+                <textarea class="form-control" rows="3" name="content">{{article.content}}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+            <a href="/articles/{{article.id}}">Back</a>
+        </form>
+        
+        {{>layouts/footer}}      
+       ```    
+
+10. 셀프체크 </br>
+    * controller/MemberController.java </br>
+      ``` java
+      // EDIT VIEW
+      @GetMapping("/members/{id}/edit")
+      public String edit(@PathVariable Long id, Model model){
+          Member memberEntity = memberRepository.findById(id).orElse(null);
+          model.addAttribute("member", memberEntity);
+  
+          return "members/edit";
+      }
+  
+      // UPDATE
+      @PostMapping("/members/update")
+      public String update(MemberForm form){
+
+        Member memberEntity = form.toEntity();
+        Member target = memberRepository.findById(memberEntity.getId()).orElse(null);
+        if(target != null){
+            memberRepository.save(memberEntity);
+        }
+
+        return "redirect:/members/" + memberEntity.getId();
+      }      
+      ```
+    *  dto : dto/MemberForm.java </br>
+       ```` java
+       @ToString // loombok로 대처
+       @AllArgsConstructor // 클래스 안쪽의 모든 필드를 매개 변수로 하는 생성자를 만드는 어노테이션
+           public class MemberForm { // DTO(data Transfer Object)폼데이터를 받아 담는 그릇
+           private Long id;
+           private String email;
+           private String password;
+       
+           public Member toEntity() { // DTO객체를 엔티티로 반환
+               return new Member(id, email, password);
+           }
+       }
+       ```` 
+    *  view Templete : resources/templates/members/show.mustache </br>
+       ```html
+       <a href="/members/{{member.id}}/edit" class="btn btn-primary">Edit</a>
+       ```      
+    *  view Templete : resources/templates/members/edit.mustache </br>
+       ```html
+        {{>layouts/header}}
+
+         <form class="container" action="/members/update" method="post">
+             <input name="id" type="hidden" value="{{id}}">
+             <div class="mb-3">
+                 <label class="form-label">이메일</label>
+                 <input type="email" class="form-control" name="email" value="{{member.email}}">
+             </div>
+             <div class="mb-3">
+                 <label class="form-label">비밀번호</label>
+                 <input type="password" class="form-control" name="password" value="{{member.password}}">
+             </div>
+             <button type="submit" class="btn btn-primary">Submit</button>
+             <a href="/members/{{member.id}}">Back</a>
+         </form>
+        
+        {{>layouts/footer}}
+       ```        
+> Day 07 정리
+> 1. 데이터 수정 1단계
+>   * 수정페이지를 만들고 기존 데이터를 불러온다
+      <img src="./src/main/resources/static/img/2023-11-27_day07_08.png" width="500px" alt="springBootProject"></img></br></br>
+> 2. 데이터 수정 1단계
+>   * 데이터를 수정해 DB에 반영한 후 결과를 볼 수 있게 상세 페이지로 리다이렉트 한다
+      <img src="./src/main/resources/static/img/2023-11-27_day07_09.png" width="500px" alt="springBootProject"></img></br></br> 
