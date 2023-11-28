@@ -12,7 +12,6 @@ springBoot
    <img src="./src/main/resources/static/img/2023-11-20_day01.png" width="1000px" alt="springBootProject"></img>
    </br></br>
 ----------------
-
 ### 2. JavaStudy Day 02 (뷰 템플릿과 MVC패턴)
 1. Model(모델) : 데이터 관리역활 </br>
 2. View Template(뷰) : 화면 담당 (스프링 프로젝트에서 <b>Mustache 뷰 템플릿 엔진 사용</b>)</br>
@@ -1035,4 +1034,77 @@ springBoot
 > 2. RedirectAttributes
 >   * 리다이렉트 페이지에서 사용할 일회성 데이터를 관리하는 객체로 이 객체의 </br>
       addFlashAttribute() 메서드로 리다이렉트된 페이지에서 사용할 일회성 데이터를 담을수 있다
-      <img src="./src/main/resources/static/img/2023-11-27_day08_02.png" width="500px" alt="springBootProject"></img></br></br>           
+      <img src="./src/main/resources/static/img/2023-11-27_day08_02.png" width="500px" alt="springBootProject"></img></br></br>
+
+### 9. JavaStudy Day 09 (CRUD & SQL)
+1. CRUD수행에 따른 DB의 SQL 쿼리 </br>
+   <img src="./src/main/resources/static/img/2023-11-28_day09_01.png" width="500px" alt="springBootProject"></img></br></br>
+2. JPA 로깅레벨
+
+   | LEVEL | NAME  | 내용                                       |
+   |-------|-------|------------------------------------------|
+   | 1     | TRACE | DEBUG보다 더 상세한 정보                         |
+   | 2     | DEBUG | 응용 프로그램을 디버깅하는 데 필요한 세부 정보(SQL 쿼리문 출력) |
+   | 3     | INFO  | 응용 프로그램의 순조로운 진행 정보                      |
+   | 4     | WARN  | 잠재적으로 유해한 상황 정보                          |
+   | 5     | ERROR | 응용 프로그램이 수행할 수 있는 정도의 오류 정보              |
+   | 6     | FATAL | 응용 프로그램이 중단될 만한 심각한 오류 정보                |
+   | 7     | OFF   | 로깅기능 해제                                  |
+
+   * 설정 파일 : resources\application.properties
+     ````
+     #JPA로깅 설정
+     # 디버그 레벨로 SQL 쿼리 출력
+     logging.level.org.hibernate.SQL=DEBUG
+     
+     # 쿼리 줄바꿈하기
+     spring.jpa.properties.hibernate.format_sql=true
+     
+     # 쿼리의 매개 변수 값 추가
+     logging.level.org.hibernate.type.descriptor.sql.BasicBinder=TRACE
+     
+     # H2 DB URL설정
+     spring.datasource.generate-unique-name=false
+     # H2 고정 URL 설정
+     spring.datasource.url=jdbc:h2:mem:testdb
+     ````
+3. id 자동생성
+   * 엔티티 : /entity/Article.java </br>
+     `````
+     @id
+     @GeneratedValue(strategy = GenerationType.IDENTITY) // id를 순차적으로 생성해줌
+     @private Long id;
+     `````
+4. 셀프 체크
+    * SQL 쿼리 </br>
+       ```sql
+       INSERT INTO burgers 
+            (id, name, price, gram, kcal, protein)
+       VALUES 
+            ( 1,'행운버거 골드','1100','222','540','25'),
+            ( 2,'트리플 치즈버거','4400','219','619','36'),
+            ( 3,'빅맥','7700','223','583','27');
+       ```
+> Day 09 정리
+> 1. JPA 로깅설정 ( resources\application.properties )
+>    ````
+>    # JPA로깅 설정
+>    # 디버그 레벨로 SQL 쿼리 출력
+>      logging.level.org.hibernate.SQL=DEBUG
+>    # 쿼리 줄바꿈하기
+>      spring.jpa.properties.hibernate.format_sql=true
+>    # 쿼리의 매개 변수 값 추가
+>      logging.level.org.hibernate.type.descriptor.sql.BasicBinder=TRACE
+>    ````  
+> </br>2. 기본키와 ID 자동생성
+>   * primary key : 기본키라고 불리우며 각각의 데이터를 유일하게 구분할 수 있도록 지정한 속성(id를 가장 많이 씀)
+>   * entity/Article.java </br> 
+>     @GeneratedValue(strategy = GenerationType.IDENTITY) // id를 순차적으로 생성해줌 </br></br>
+> 3. CURD와 SQL </br>
+>   <img src="./src/main/resources/static/img/2023-11-28_day09_01.png" width="500px" alt="springBootProject"></img></br>
+>   * CREATE TABLE : 테이블 만드는 쿼리 
+>   * INSERT : 테이블에서 데이터를 생성하는 쿼리
+>   * SELECT : 테이블에서 데이터를 조회 하는 쿼리
+>   * UPDATE : 테이블에서 데이터를 수정하는 쿼리
+>   * DELETE : 테이블에세 데이터를 삭제하는 쿼리
+> 
