@@ -798,12 +798,13 @@ springBoot
    <img src="./src/main/resources/static/img/2023-11-27_day07_05.png" width="500px" alt="springBootProject"></img></br></br> 
 5. CRUD를 위한 SQL 문과 HTTP 메서드
 
-   | 데이터 관리          | SQL    | HTTP       |
-   |-----------------|--------|------------|
-   | 데이터 생성 (Create) | INSERT | POST       |
-   | 데이터 조회 (Read)   | SELECT | GET        |
-   | 데이터 수정 (Update) | UPDATE | PATCH(PUT) |
-   | 데이터 삭제 (Delete) | DELETE | DELETE     |
+   | 데이터 관리          | SQL           | HTTP       |
+   |-----------------|---------------|------------|
+   | 데이터 생성 (Create) | INSERT        | POST       |
+   | 데이터 조회 (Read)   | SELECT        | GET        |
+   | 데이터 수정 (Update) | UPDATE(지정 컬럼) | PATCH |
+   | 데이터 수정 (Update) | UPDATE(전체)    | PUT |
+   | 데이터 삭제 (Delete) | DELETE        | DELETE     |
 
 6. DB에 저장 된 기존 데이터가 갱신되는 과정</br>
    <img src="./src/main/resources/static/img/2023-11-27_day07_06.png" width="500px" alt="springBootProject"></img></br></br>
@@ -1107,4 +1108,57 @@ springBoot
 >   * SELECT : 테이블에서 데이터를 조회 하는 쿼리
 >   * UPDATE : 테이블에서 데이터를 수정하는 쿼리
 >   * DELETE : 테이블에세 데이터를 삭제하는 쿼리
-> 
+
+### 10. REST API & JSON
+1. REST API </br>
+   * 서버 자원을 클라이언트에 구애받지 않고 사용할 수 있게 하는 설계 방식
+   * HTTP 요청에 대한 응답으로 서버자원을 반환
+   * 서버에 보내는 응답이 특정 기기에 종속 되지 않도록 모들 기기에 통용 될 수 있는 데이터 반환
+     <img src="./src/main/resources/static/img/2023-11-29_day10_01.png" width="500px" alt="springBootProject"></img></br></br>
+
+2. JSON 데이터
+   * 키(key)와 값(value)으로 구성된 정렬되지 않은 속성(property)의 집합
+   * 키(key)는 문자열 이므로 항상 큰따옴표(" ")로 감쌈
+   * 값(value)는 문자열인 경우에만 큰따옴표(" ")로 감쌈
+     ``` json
+     * 형식
+     {
+        "key1" : "value",
+        "key2" : "value",
+        "key3" : "value"       
+     }
+
+     * sample     
+     {
+        "name" : "진돌이",
+        "breeds" : "진돗개",
+        "age" : 3
+     }
+     
+     ```
+3. REST API 사용 예 </br>
+   <img src="./src/main/resources/static/img/2023-11-29_day10_02.png" width="500px" alt="springBootProject"></img>
+    * GET : 데이터 조회 
+    * PUT : 기존 데이터를 전부 새 내용으로 변경, 기존 데이터가 없다면 새로 생성
+    * PATCH : 기존 데이터 중 일부만 새 내용으로 변경
+    * DELETE : 데이터 삭제 </br></br>
+
+5. HTTP 상태 코드
+
+   | 상태코드                      | 설명                                 |
+   |-------------------------|------------------------------------|
+   | 1XX (정보)               | 요청이 수신돼 처리 중                       |
+   | 2XX (성공)               | 요청이 정상적으로 처리                       |
+   | 3XX (리다이렉션 메세지)    | 요청을 완료하려면 추가 행동이 필요                |
+   | 4XX (클라이언트 요청 오류) | 클라이언트의 요청이 잘못돼 서버가 요청을 수행할 수 없습니다. | 
+   | 5XX (서버 응답 오류)      | 서버 내부에서 에러가 발생해 클라이언트 요청을 수행하지 못함 |
+
+6. HTTP 메시지
+   * start line (시작라인) : HTTP 요청 또는 응답 내용이 있습니다. 시작 라인은 한줄로 끝남
+   * headers(헤더) : HTTP 전송에 필요한 부가정보(metadata)가 있습니다.
+   * blank line(빈 라인) : 헤더의 끝을 알리는 빈줄로, 헤더가 모두 전송되었음을 알림.
+   * body(본문) : 실제 전송하는 데이터가 있음. </br></br>
+     * HTTP Request Message </br> 
+       <img src="./src/main/resources/static/img/2023-11-29_day10_03.png" width="500px" alt="springBootProject"></img>
+     * HTTP Response Message </br>
+       <img src="./src/main/resources/static/img/2023-11-29_day10_04.png" width="500px" alt="springBootProject"></img> 
