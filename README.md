@@ -1161,4 +1161,141 @@ springBoot
      * HTTP Request Message </br> 
        <img src="./src/main/resources/static/img/2023-11-29_day10_03.png" width="500px" alt="springBootProject"></img>
      * HTTP Response Message </br>
-       <img src="./src/main/resources/static/img/2023-11-29_day10_04.png" width="500px" alt="springBootProject"></img> 
+       <img src="./src/main/resources/static/img/2023-11-29_day10_04.png" width="500px" alt="springBootProject"></img>
+
+### 11. HTTP & REST 컨트롤러
+1. REST API : REST 기반으로 API를 구현한 것
+   * REST : HTTP URL로 서버 자원을 명시하고 HTTP 메서드(POST,GET,PATCH,PUT,DELETE)로 해당 자원에 대해 CRUD(생성, 조회, 수정, 삭제)하는것 
+   * API : 클라이언트가 서버의 자원을 요청할 수 있도록 서버에서 제공하는 인터페이스
+   * 요청 메시지의 구조
+   <img src="./src/main/resources/static/img/2023-11-30_day10_01.png" width="500px" alt="springBootProject"></img></br></br>
+
+   * 응답 메시지의 구조
+   <img src="./src/main/resources/static/img/2023-11-30_day10_02.png" width="500px" alt="springBootProject"></img></br></br>
+
+2. REST API의 구현
+    * 조회 요청 : GET 메서드
+    * 생성 요청 : POST 메서드
+    * 수정 요청 : PATCH 메서드
+    * 삭제 요청 : DELETE 메서드 
+   <img src="./src/main/resources/static/img/2023-11-30_day10_03.png" width="500px" alt="springBootProject"></img></br></br>
+
+   * REST 컨트롤러와 ResponseEntity의 역할
+   <img src="./src/main/resources/static/img/2023-11-30_day10_04.png" width="500px" alt="springBootProject"></img></br>
+
+3. REST API 소스코드
+   * api/ArticleApiController.java </br>
+       ```java
+          @Slf4j // 로그 어노테이션
+          @RestController // Rest 컨트롤러 선언
+          public class ArticleApiController {
+          @Autowired // 게시글 리파지터리 주입
+          private ArticleRepository articleRepository;
+          
+              // GET : 데이터 조회
+              @GetMapping("/api/articles") // URL요청접수
+              public List<Article> index(){ // index 메서드 정의
+                  return articleRepository.findAll();
+              }
+              @GetMapping("/api/articles/{id}") // URL요청접수(특정 ID가져옴)
+              public Article show(@PathVariable Long id){
+                  return articleRepository.findById(id).orElse(null);
+              }
+              // POST : 데이터 생성
+              @PostMapping("/api/articles")
+              public Article create(@RequestBody ArticleForm dto){ // dto의 클래스 ArticleForm / @RequestBody 어노테이션은 HTTP 요청의 body 내용(JSON)을 자바 객체로 매핑하는 역할
+                  Article article = dto.toEntity(); // dto를 엔티티에 변환(담는)다
+                  return articleRepository.save(article); // 리파지터레에 담아 저장한다
+              }
+          
+              // PATCH : 데이터 수정
+              @PatchMapping("/api/articles/{id}")
+              public ResponseEntity<Article> update(@PathVariable Long id, @RequestBody ArticleForm dto){ // ArticleForm의 dto는 수정하는 내용(title, content)을 담는다
+                  // 1. dto --> 엔티티 변환
+                  Article article = dto.toEntity(); // dto를 엔티티에 변환(담는)다
+                  log.info("id : {}, article : {}", id, article.toString());
+                  
+                  // 2. 데이터 조회
+                  Article target = articleRepository.findById(id).orElse(null);
+          
+                  // 3. 잘못된 요청 처리하기
+                  if(target == null || id != article.getId()){
+                      log.info("잘못된 요청! id : {}, arcicle : {}", id, article.toString());
+                      return ResponseEntity.status(BAD_REQUEST).body(null);
+                  }
+          
+                  // 4. 업데이트 및 정상 응답(200)하기
+                  target.patch(article); // 엔티티에 패치 매서드를 만들어 데이터가 수정한 경우에만 업데이트가 되게 한다
+                  Article updated = articleRepository.save(target); // article 엔티티 DB에 저장
+                  return ResponseEntity.status(HttpStatus.OK).body(updated); // http결과 값 전달(응답)
+              }
+          
+          
+              // DELETE : 데이터 삭제
+              @DeleteMapping("/api/articles/{id}")
+              public ResponseEntity<Article>  delete(@PathVariable Long id){
+                  // 1. 대상찾기
+                  Article target = articleRepository.findById(id).orElse(null);
+                  // 2. 잘못된 요청 처리하기
+                  if(target == null){
+                      log.info("잘못된 요청! id : {}", id);
+                      return ResponseEntity.status(BAD_REQUEST).body(null);
+                  }
+                  // 3. 데이터 삭제
+                  articleRepository.delete(target);
+          
+                  return ResponseEntity.status(HttpStatus.OK).build(); // build() HTTP응답의 body가 없는 ResponseEntity 객체를 생성 body(updated)과 같은의미
+              }
+          }
+       ```          
+   * api/ArticleApiController.java </br>
+      ```java
+      @AllArgsConstructor  // title와 content를 저장하는 생성자가 자동으로 생성됨 (lombok의 어노테이션)
+      @NoArgsConstructor // 기본생성자 추가 어노테이션
+      @ToString // toString() 메서드 대체
+      @Entity // 데이터베이스의 테이블과 일대일로 매칭되는 객체 단위 Entity객체의 인스턴스 하나가 테이블에서 하나의 레코드 값을 의미한다
+      @Getter // 외부에서 객체의 데이터를 읽을 때 사용하는 어노테이션
+      public class Article {
+      @Id
+      @GeneratedValue(strategy = GenerationType.IDENTITY) // id를 순차적으로 생성해줌
+      private Long id;
+      
+          @Column
+          private String title;
+      
+          @Column
+          private String content;
+          // patch 메서드 rest api 사용시 수정(갱신)된 컬럼만 update하기 위해 작성  
+          public void patch(Article article) {
+              if(article.title != null)
+                  this.title = article.title;
+      
+              if(article.content != null)
+                  this.content = article.content;
+          }
+      
+      }    
+      ```
+
+4. 셀프 체크
+
+> Day 11 정리
+> 1. REST 컨트롤러  
+>    * REST API로 설계된 URL 요청을 받아 처리하는 컨트롤러
+>    * JSON이나 텍스트 같은 데이터를 반환</br></br>
+> 2. REST 컨트롤러의 특징
+>    * @RestController 어노테이션을 붙여 선언함
+>    * 클라이언트의 데이터 조회, 생성, 수정, 삭제 요청을 HTTP 메서드에 맞게 각각  
+>      @GetMapping, @PostMapping, @PatchMapping, @DeleteMapping </br> </br>
+> 3. ResponseEntity  
+>    * REST 컨트롤러의 반환형
+>    * REST API의 응답을 위해 사용하는 클래스
+>    * REST API요청을 받아 응답시 이 클래스에 HTTP 상태코드, 헤더, 본문을 실어 보낼수 있음</br></br>
+> 4. HttpStatus
+>   * Http 상태 코드를 관리하는 클래스(다양한 enum 타입과 관련한 메서드를 가짐)
+>   * 상태코드 
+>     * 200 : HttpStatus.OK
+>     * 201 : HttpStatus.CREATED 
+>     * 400 : HTTPStatus.BAD_REQUEST 등 으로 관리
+>   * UPDATE : 테이블에서 데이터를 수정하는 쿼리
+>   * DELETE : 테이블에세 데이터를 삭제하는 쿼리
