@@ -1248,7 +1248,7 @@ springBoot
               }
           }
        ```          
-   * api/ArticleApiController.java </br>
+   * entity/Article.java </br>
       ```java
       @AllArgsConstructor  // title와 content를 저장하는 생성자가 자동으로 생성됨 (lombok의 어노테이션)
       @NoArgsConstructor // 기본생성자 추가 어노테이션
@@ -1299,3 +1299,194 @@ springBoot
 >     * 400 : HTTPStatus.BAD_REQUEST 등 으로 관리
 >   * UPDATE : 테이블에서 데이터를 수정하는 쿼리
 >   * DELETE : 테이블에세 데이터를 삭제하는 쿼리
+
+### 12. 서비스 계층과 트랜잭션
+1. service (서비스) 
+    * 컨트롤러와 리파지터리 사이에 위치하는 계층으로 서버의 핵심기능 (비지니스 로직)을   
+      처리하는 곳
+      <img src="./src/main/resources/static/img/2023-12-01_day12_01.png" width="500px" alt="springBootProject"></img></br>
+2. transaction (트랜잭션)
+    * 서비스 업무는 트랜잭션 단위로 수행이됨
+    * 모두 성공해야 하는 일련의 과정으로 트랜잭션이 실패로 돌아갈 경우 진행 초기 단계로 돌아간다(roolback)
+
+    * 컨트롤러 - 서비스 - 리파지터리 관계
+      <img src="./src/main/resources/static/img/2023-12-01_day12_01.png" width="500px" alt="springBootProject"></img></br></br>
+ 
+    * 트랜잭션 (식당예약 개념으로 본)   
+      <img src="./src/main/resources/static/img/2023-12-01_day12_02.png" width="500px" alt="springBootProject"></img></br></br>
+    * 트랜잭션 (결재실패시 롤백)
+      <img src="./src/main/resources/static/img/2023-12-01_day12_03.png" width="500px" alt="springBootProject"></img></br></br> 
+    * 과거의 REST컨트롤러 (서비스역활도 하고 있다)
+      <img src="./src/main/resources/static/img/2023-12-01_day12_04.png" width="500px" alt="springBootProject"></img></br></br>
+3. 소스코드
+    * api/ArticleApiController.java </br>
+      ````java
+      @Slf4j // 로그 어노테이션
+      @RestController // Rest 컨트롤러 선언
+      public class ArticleApiController {
+   
+          // 서비스 계층을 거치는 소스
+          @Autowired // 서비스 객체 주입 (생성객체를 가져와 연결)
+          private ArticleService articleService;
+   
+          // 서비스 클래스를 이용한 CRUD
+          // GET : 데이터 조회
+          @GetMapping("/api/articles") // URL요청접수
+          public List<Article> index(){ // index 메서드 정의
+              return articleService.index();
+          }
+   
+          // GET : 데이터 조회
+          @GetMapping("/api/articles/{id}") // URL요청접수(특정 ID가져옴)
+          public Article show(@PathVariable Long id){
+              return articleService.show(id);
+          }
+   
+          // POST : 데이터 생성
+          @PostMapping("/api/articles")
+          public ResponseEntity<Article> create(@RequestBody ArticleForm dto){ // dto의 클래스 ArticleForm / @RequestBody 어노테이션은 HTTP 요청의 body 내용(JSON)을 자바 객체로 매핑하는 역할
+                 // ResponseEntity<Article> 반환형 수정을 의미 
+           
+                 Article created = articleService.create(dto);
+                 return (created != null) ? // 생성 정상 유무에 따른 리턴
+                         ResponseEntity.status(HttpStatus.OK).body(created) :
+                         ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+          }
+   
+          // PATCH : 데이터 수정
+          @PatchMapping("/api/articles/{id}")
+          public ResponseEntity<Article> update(@PathVariable Long id, @RequestBody ArticleForm dto){
+              Article updated = articleService.update(id, dto); // 서비스를 통해 글 수정
+   
+              return (updated != null) ? // 생성 정상 유무에 따른 리턴
+                      ResponseEntity.status(HttpStatus.OK).body(updated) :
+                      ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+          }
+   
+          // DELETE : 데이터 삭제
+          @DeleteMapping("/api/articles/{id}")
+          public ResponseEntity<Article>  delete(@PathVariable Long id){
+   
+              Article deleted = articleService.delete(id);
+   
+              return (deleted == null) ?
+                  ResponseEntity.status(HttpStatus.NO_CONTENT).build() : // build() HTTP응답의 body가 없는 ResponseEntity 객체를 생성 body(updated)과 같은의미
+                  ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+          }
+   
+          // 트렌잭션 테스트
+          @PostMapping("/api/transaction-test") // 여러 게시글 생성 요청 접수
+          public ResponseEntity<List<Article>> transactionTest (@RequestBody List<ArticleForm> dtos){
+              // @RequestBody 어노테이션 : POST요청 시 본문에 실어 보내는 데이터를 transactionTest()의 메서드를 매개 변수로 받아오는 역활
+              // 컨트롤러는 요청만 받고 결과만 반환, 실제 작업은 서비스가 함
+              List<Article> createdList = articleService.createArticles(dtos); // 서비스 호출
+              return (createdList != null) ? // 생성 결과에 따라 응답 처리
+                      ResponseEntity.status(HttpStatus.OK).body(createdList) :
+                      ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+          }
+
+      }
+      ````     
+    * service/ArticleService.java </br>
+      ````java
+      @Slf4j
+      @Service // 서비스 객체 생성
+      public class ArticleService {
+         @Autowired
+         private ArticleRepository articleRepository; // 게시글 리파지터리 객체 주입
+  
+           public List<Article> index() { // GET
+               return articleRepository.findAll();
+           }
+    
+           public Article show(Long id) { // GET
+               return articleRepository.findById(id).orElse(null);
+           }
+    
+           public Article create(ArticleForm dto) { // POST
+               Article article = dto.toEntity(); // dto를 엔티티로 변환 후 article에 저장
+               if(article.getId() != null){ // id가 존재할경우 null을 반환(id가존재하면 생성하면 않됨)
+                   return null;
+               }
+    
+               return articleRepository.save(article); // article을 DB에 저장
+           }
+    
+           public Article update(Long id, ArticleForm dto) { // UPDATE
+               // 1. dto --> 엔티티 변환
+               Article article = dto.toEntity();
+               log.info("id : {}, article : {}", id, article.toString());
+    
+               // 2. 데이터 조회
+               Article target = articleRepository.findById(id).orElse(null);
+    
+               // 3. 잘못된 요청 처리하기
+               if(target == null || id != article.getId()){
+                   log.info("잘못된 요청! id : {}, arcicle : {}", id, article.toString());
+                   return null;
+               }
+    
+               // 4. 업데이트
+               target.patch(article);
+               Article updated = articleRepository.save(target);
+               return updated;
+           }
+    
+           public Article delete(Long id) { // DELETE
+    
+               // 1. 대상찾기
+               Article target = articleRepository.findById(id).orElse(null);
+               // 2. 잘못된 요청 처리하기
+               if(target == null){
+                   log.info("잘못된 요청! id : {}", id);
+                   return null;
+               }
+               // 3. 데이터 삭제
+               articleRepository.delete(target);
+    
+               return target; // DB에서 삭제한 대상을 컨트롤러에 반환한다
+           }
+    
+           @Transactional // 밑의 메서드는 하나의 트랜잭션으로 묶인다
+           public List<Article> createArticles(List<ArticleForm> dtos) {
+               // 1. dto 묶음을 엔티티 묶음(스트림 화)으로 변환
+               List<Article> articleList = dtos.stream()
+                       .map(dto -> dto.toEntity())
+                       .collect(Collectors.toList());
+    
+               // 2. 엔티티 묶음을 DB에 저장
+               articleList.stream().forEach(article -> articleRepository.save(article));
+    
+               // 3. 강제 예외 발생시키키
+               articleRepository.findById(-1L).orElseThrow(() -> new IllegalArgumentException("결제 실패!"));
+               // 찾는 데이터가 없으면 예외 발상
+    
+               // 4. 결과 값 반환하기
+               return  articleList;
+           }
+      }   
+      ```` 
+4. 셀프 체크      
+
+> Day 12 정리
+> 1. 서비스(service)
+>    * 컨트롤러와 리파지터리 사이에 위치하는 계층
+>    * 서버의 핵심기능(비지니스 로직)을 처리하는 순서 총괄
+>    * 클라이언트 요청 -> 컨트롤러 -> 서비스 : 정해진 코드의 흐름을 따라 처리 진행   
+>      (처리에 필요한 데이터는 리파지터리가 DB에서 가져와 서비스로 반환) 
+> 2. 트랜잭션(transaction)
+>    * 모두 성공해야 하는 일련의 과정으로, 쪼갤 수 없는 업무 처리의 최소 단위  
+>      (보통 서비스에서 관리)
+> 3. 롤백(RollBack)
+>    * 트랜잭션 내부에서 실행에 실패하면 수행한 모든 것을 모두 폐기하고 진행  
+>      초기 단계로 되돌아 가는것
+> 4. @Service
+>   * 해당 어노테이션이 선언된 클래스를 서비스로 인식해 서비스 객체를 생성
+>   * 컨트롤러는 객체 주입(@Autowired 통해 객체를 가져와 연결)하는 방식으로
+>     서비스 객체를 사용할 수 있다
+> 5. @Transactional
+>   * 해당 어노테이션이 선언된 메서드를 트랜잭션으로 묶음
+>   * 클래스에 이 어노테이션을 선언하면 클래스의 모든 메서드별로 각각의  
+>     트랜잭션이 부여됨
+>   * 트랜잭션으로 묶인 메서드는 처음부터 끝까지 완전히 실행되거나  
+>     아예 실행되지 않거나 둘중 하나로 동작함(중간에 실패시 롤백되기 때문)
