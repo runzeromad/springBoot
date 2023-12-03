@@ -1278,6 +1278,128 @@ springBoot
       ```
 
 4. 셀프 체크
+    * api/CoffeeApiController.java </br>
+        ```java
+           @Slf4j // 로그 어노테이션
+           @RestController // Rest 컨트롤러 선언
+      
+           public class CoffeeApiController {
+       
+               @Autowired // 게시글 리파지터리 주입
+               private CoffeeRepository coffeeRepository;
+           
+               // GET : 데이터 조회
+               @GetMapping("/api/coffees")
+               public List<Coffee> index(){ // index 메서드 정의
+                   return coffeeRepository.findAll();
+               }
+               @GetMapping("/api/coffees/{id}")
+               public Coffee show(@PathVariable Long id){
+                   return coffeeRepository.findById(id).orElse(null);
+               }
+               // POST : 데이터 생성
+               @PostMapping("/api/coffees")
+               public Coffee create(@RequestBody CoffeeForm dto){
+                   Coffee coffee = dto.toEntity(); // dto를 엔티티에 담는다
+                   return coffeeRepository.save(coffee); // 리파지터레에 담아 저장한다
+               }
+           
+               // PATCH : 데이터 수정
+               @PatchMapping("/api/coffees/{id}")
+               public ResponseEntity<Coffee> update(@PathVariable Long id, @RequestBody CoffeeForm dto){ // ArticleForm의 dto는 수정하는 내용(name, price)을 담는다
+                   // 1. dto --> 엔티티 변환
+                   Coffee coffee = dto.toEntity();
+                   log.info("id : {}, article : {}", id, coffee.toString());
+                   
+                   // 2. 데이터 조회
+                   Coffee target = coffeeRepository.findById(id).orElse(null);
+           
+                   // 3. 잘못된 요청 처리하기
+                   if(target == null || id != coffee.getId()){
+                       log.info("잘못된 요청! id : {}, coffee : {}", id, coffee.toString());
+                       return ResponseEntity.status(BAD_REQUEST).body(null);
+                   }
+           
+                   // 4. 업데이트 및 정상 응답(200)하기
+                   target.patch(coffee); // 엔티티에 패치 매서드를 만들어 데이터가 수정한 경우에만 업데이트가 되게 한다
+                   Coffee updated = coffeeRepository.save(target); // article 엔티티 DB에 저장
+           
+                   return ResponseEntity.status(HttpStatus.OK).body(updated); // http결과 값 전달(응답)
+               }
+           
+               // DELETE : 데이터 삭제
+               @DeleteMapping("/api/coffees/{id}")
+               public ResponseEntity<Coffee> delete(@PathVariable Long id){
+                   // 1. 대상찾기
+                   Coffee target = coffeeRepository.findById(id).orElse(null);
+                   // 2. 잘못된 요청 처리하기
+                   if(target == null){
+                       log.info("잘못된 요청! id : {}", id);
+                       return ResponseEntity.status(BAD_REQUEST).body(null);
+                   }
+                   // 3. 데이터 삭제
+                   coffeeRepository.delete(target);
+           
+                   return ResponseEntity.status(HttpStatus.OK).build(); // build() HTTP응답의 body가 없는 ResponseEntity 객체를 생성 body(updated)과 같은의미
+               }
+       
+           }      
+        ```
+
+   * dto/CoffeeForm.java </br>
+     ```java
+     @AllArgsConstructor // title와 content를 저장하는 생성자가 자동으로 생성됨 (lombok의 어노테이션)
+     @ToString // toString() 효과
+     
+     public class CoffeeForm { // DTO(data Transfer Object)폼데이터를 받아 담는 그릇
+         private Long id; // 키값
+         private String name; // 커피종류를 받는 필드
+         private String price; // 커피 가격을 받는 필드
+
+         public Coffee toEntity() { // DTO객체를 엔티티로 반환
+         return new Coffee(id, name, price);
+         }
+     }
+     ```
+
+   * entity/Coffee.java </br>
+     ```java
+     @AllArgsConstructor  // title와 content를 저장하는 생성자가 자동으로 생성됨 (lombok의 어노테이션)
+     @NoArgsConstructor // 기본생성자 추가 어노테이션
+     @ToString // toString() 메서드 대체
+     @Entity // 데이터베이스의 테이블과 일대일로 매칭되는 객체 단위 Entity객체의 인스턴스 하나가 테이블에서 하나의 레코드 값을 의미한다
+     @Getter // 외부에서 객체의 데이터를 읽을 때 사용하는 어노테이션
+     
+     public class Coffee {
+         @Id
+         @GeneratedValue(strategy = GenerationType.IDENTITY) // id를 순차적으로 생성해줌
+         private Long id;
+         @Column
+         private String name;
+
+         @Column
+         private String price;
+
+         public void patch(Coffee coffee) {
+         if(coffee.name != null)
+             this.name = coffee.name;
+
+         if(coffee.price != null)
+             this.price = coffee.price;
+
+         }
+     }
+     ```
+
+   * repository/CoffeeRepository.java </br>
+     ```java
+     public interface CoffeeRepository extends CrudRepository <Coffee, Long>{ // CrudRepository 부모 -> ArticleRepository 자식 상속(extends)관계
+         @Override
+         ArrayList<Coffee> findAll();
+     }     
+     ```
+
+
 
 > Day 11 정리
 > 1. REST 컨트롤러  
