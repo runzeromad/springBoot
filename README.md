@@ -968,7 +968,8 @@ springBoot
       <img src="./src/main/resources/static/img/2023-11-27_day07_08.png" width="500px" alt="springBootProject"></img></br></br>
 > 2. 데이터 수정 2단계
 >   * 데이터를 수정해 DB에 반영한 후 결과를 볼 수 있게 상세 페이지로 리다이렉트 한다
-      <img src="./src/main/resources/static/img/2023-11-27_day07_09.png" width="500px" alt="springBootProject"></img></br></br> 
+      <img src="./src/main/resources/static/img/2023-11-27_day07_09.png" width="500px" alt="springBootProject"></img></br></br>
+---------------- 
 ### 8. JavaStudy Day 08 (delete)
 1. 데이터 삭제과정 </br>
    <img src="./src/main/resources/static/img/2023-11-27_day08_01.png" width="500px" alt="springBootProject"></img></br>
@@ -1036,7 +1037,7 @@ springBoot
 >   * 리다이렉트 페이지에서 사용할 일회성 데이터를 관리하는 객체로 이 객체의 </br>
       addFlashAttribute() 메서드로 리다이렉트된 페이지에서 사용할 일회성 데이터를 담을수 있다
       <img src="./src/main/resources/static/img/2023-11-27_day08_02.png" width="500px" alt="springBootProject"></img></br></br>
-
+----------------
 ### 9. JavaStudy Day 09 (CRUD & SQL)
 1. CRUD수행에 따른 DB의 SQL 쿼리 </br>
    <img src="./src/main/resources/static/img/2023-11-28_day09_01.png" width="500px" alt="springBootProject"></img></br></br>
@@ -1108,7 +1109,7 @@ springBoot
 >   * SELECT : 테이블에서 데이터를 조회 하는 쿼리
 >   * UPDATE : 테이블에서 데이터를 수정하는 쿼리
 >   * DELETE : 테이블에세 데이터를 삭제하는 쿼리
-
+----------------
 ### 10. REST API & JSON
 1. REST API </br>
    * 서버 자원을 클라이언트에 구애받지 않고 사용할 수 있게 하는 설계 방식
@@ -1162,7 +1163,7 @@ springBoot
        <img src="./src/main/resources/static/img/2023-11-29_day10_03.png" width="500px" alt="springBootProject"></img>
      * HTTP Response Message </br>
        <img src="./src/main/resources/static/img/2023-11-29_day10_04.png" width="500px" alt="springBootProject"></img>
-
+----------------
 ### 11. HTTP & REST 컨트롤러
 1. REST API : REST 기반으로 API를 구현한 것
    * REST : HTTP URL로 서버 자원을 명시하고 HTTP 메서드(POST,GET,PATCH,PUT,DELETE)로 해당 자원에 대해 CRUD(생성, 조회, 수정, 삭제)하는것 
@@ -1421,7 +1422,7 @@ springBoot
 >     * 400 : HTTPStatus.BAD_REQUEST 등 으로 관리
 >   * UPDATE : 테이블에서 데이터를 수정하는 쿼리
 >   * DELETE : 테이블에세 데이터를 삭제하는 쿼리
-
+----------------
 ### 12. 서비스 계층과 트랜잭션
 1. service (서비스) 
     * 컨트롤러와 리파지터리 사이에 위치하는 계층으로 서버의 핵심기능 (비지니스 로직)을   
@@ -1749,3 +1750,194 @@ springBoot
 >     트랜잭션이 부여됨
 >   * 트랜잭션으로 묶인 메서드는 처음부터 끝까지 완전히 실행되거나  
 >     아예 실행되지 않거나 둘중 하나로 동작함(중간에 실패시 롤백되기 때문)
+----------------
+### 13. 테스트 코드 작성하기
+1. 테스트 코드 3단계  
+   1. 예상 데이터 작성  
+   2. 실제 데이터 획득  
+   3. 예상 데이터와 실제 데이터 비교 검증하기    
+   * 테스트 방식의 진화  
+   <img src="./src/main/resources/static/img/2023-12-04_day13_01.png" width="500px" alt="springBootProject"></img></br></br>
+   * 테스트 실행과 결과 처리 
+   <img src="./src/main/resources/static/img/2023-12-04_day13_02.png" width="500px" alt="springBootProject"></img></br></br>
+   * 테스트 케이스  
+     <img src="./src/main/resources/static/img/2023-12-04_day13_04.png" width="300px" alt="springBootProject"></img></br></br>
+2. TDD : 테스트 주도개발(Test Driven Development)  
+   * 테스트를 통한 코드 검증과 리팩터링  
+   * 테스트 주도 개발    
+     <img src="./src/main/resources/static/img/2023-12-04_day13_03.png" width="300px" alt="springBootProject"></img></br></br> 
+
+3. 소스코드
+    * service/ArticleServiceTest </br>
+      ````java
+      @SpringBootTest // 해당 클래스를 스프링 부트와 연동해 통합 테스트를 수행하겠다고 선언하는것
+      class ArticleServiceTest {
+        @Autowired
+        ArticleService articleService; // articlesService 객체 주입
+      
+        @Test // 테스트를 위한 코드라는 선언
+        void index() {
+        // 1. 예상데이터 작성하기
+        Article a = new Article(1L,"가가가가","111111"); // 예상데이터 객체로 저장
+        Article b = new Article(2L,"나나나나","222222"); // 예상데이터 객체로 저장
+        Article c = new Article(3L,"다다다다","333333"); // 예상데이터 객체로 저장
+        List<Article> expected = new ArrayList<Article>(Arrays.asList(a, b, c)); // a,b,c 합치기
+        // Arrays.asList()메서드로 합친 정적 리스트를 new ArrayList로 만들어 expected에 담음
+        
+        // Arrays.asList()는 입력된 배열 또는 2개 이상의 동일한 타입 데이터를 정적 리스트로 만들어 반환
+        // 정적 리스트는 고정 크기이므로 add()나 remove()를 사용할수 없다
+        // 정적 리스트에서 add()나 remove()를 사용하려면 정적 리스트를 일반 리스트로 새로 만들어야 한다
+      
+        // 2. 실제 데이터 획득하기
+        List<Article> articles = articleService.index();
+      
+        // 3. 예상 데이터와 실제 데이터 비교 검증하기
+        assertEquals(expected.toString(), articles.toString());
+        }
+      
+        @Test
+        void show_성공_존재하는_id로_입력() { // success
+            // 1. 예상데이터 작성하기
+            Long id = 1L;
+            Article expected = new Article(id, "가가가가", "111111"); // 예상 데이터 작성 저장
+            // 2. 실제 데이터 획득하기
+            Article article = articleService.show(id); // 실 데이터 불러와 저장
+            // 3. 예상데이터와 실제 데이터 비교 검증하기
+            assertEquals(expected.toString(), article.toString()); // 두 데이터 비교해서 판단
+        }
+      
+        @Test
+        void show_실패_존재하지_않는_id로_입력() { // success
+            // 1. 예상데이터 작성하기
+            Long id = -1L; // 존재 하지 않는 데이터
+            Article expected = null; // 오류 데이터 작성
+            // 2. 실제 데이터 획득하기
+            Article article = articleService.show(id); // 실 데이터 불러와 저장
+            // 3. 예상데이터 / 실제 데이터 비교 검증하기
+            assertEquals(expected, article); // 두 데이터 비교해서 판단
+      
+            // 잘통과됨 존재하지 않는 데이터가 있을경우 null을 반환하고 예상 데이터도 null을 반환 하기 때문
+        }
+      
+        @Test
+        @Transactional
+        void create_성공_title과_content만_있는_dto_입력() {
+            // 1. 예상데이터 입력
+            String title = "라라라라";
+            String content = "4444";
+            Article expected = new Article(4L, title, content); // 예상 데이터
+            // 2. 실제 데이터 입력
+            ArticleForm dto = new ArticleForm(null, title, content); // 실제 데이터
+            Article article = articleService.create(dto);
+            // 3. 데이터 비교 및 검증
+            assertEquals(expected.toString(), article.toString());
+        }
+      
+        @Test
+        @Transactional
+        void create_실패_id가_포함된_dto_입력() {
+            // 1. 예상데이터 입력
+            Long id = 4L;
+            String title = "라라라라";
+            String content = "4444";
+            Article expected = null; // 예상 데이터
+            // 2. 실제 데이터 입력
+            ArticleForm dto = new ArticleForm(id, title, content); // 실제 데이터
+            Article article = articleService.create(dto);
+            // 3. 데이터 비교 및 검증
+            assertEquals(expected, article);
+        }
+      
+      }      
+      ````
+4. 셀프 체크
+    * service/ArticleServiceTest </br>
+    ```java
+        @Test
+        @Transactional
+        void update를_성공존재하는_id와_title_content가_있는_dto_입력(){
+            // 1. 예상데이터 입력
+            Long id = 2L;
+            String title = "나나나나1111";
+            String content = "2222223333";
+            Article expected = new Article(id, title, content); // 예상 데이터
+            // 2. 실제 데이터 입력
+            ArticleForm dto = new ArticleForm(id, title, content); // 실제 데이터
+            Article article = articleService.update(id,dto);
+            // 3. 데이터 비교 및 검증
+            assertEquals(expected.toString(), article.toString());
+        }
+      
+        @Test
+        @Transactional
+        void update를_성공존재하는_id와_title만_있는_dto_입력(){
+            // 1. 예상데이터 입력
+            Long id = 2L;
+            String title = "가나다라마바사";
+            String content = null;
+            Article expected = new Article(id, "가나다라마바사", "222222"); // 예상 데이터
+            // 2. 실제 데이터 입력
+            ArticleForm dto = new ArticleForm(id, title, content); // 실제 데이터
+            Article article = articleService.update(id, dto);
+            // 3. 데이터 비교 및 검증
+            assertEquals(expected.toString(), article.toString());
+        }
+      
+        @Test
+        @Transactional
+        void update를_성공존재하는_id의_dto_입력(){
+            // 1. 예상데이터 입력
+            Long id = -1L;
+            String title = "AAAAA";
+            String content = "test111";
+            Article expected = null; // 예상 데이터
+            // 2. 실제 데이터 입력
+            ArticleForm dto = new ArticleForm(id, title, content); // 실제 데이터
+            Article article = articleService.update(id, dto);
+            // 3. 데이터 비교 및 검증
+            assertEquals(expected, article);
+        }
+      
+        @Test
+        @Transactional
+        void delete_존재하는_id입력_성공한경우(){
+            // 1. 예상데이터 입력
+            Long id = 1L;
+            Article expected = new Article(id, "가가가가", "111111");
+            // 2. 실제 데이터 입력
+            Article article = articleService.delete(id);
+            // 3. 데이터 비교 및 검증
+            assertEquals(expected.toString(), article.toString());
+        }
+      
+        @Test
+        @Transactional
+        void delete_존재하지않는_id입력_실패한경우(){
+            // 1. 예상데이터 입력
+            Long id = -1L;
+            Article expected = null;
+            // 2. 실제 데이터 입력
+            Article article = articleService.delete(id);
+            // 3. 데이터 비교 및 검증
+            assertEquals(expected, article);
+        }   
+    ```   
+
+> Day 13 정리
+> 1. 테스트(test)
+>    * 프로그램의 품질을 검증하는 것으로, 의도 대로 프로그램이 잘 동작하는지 확인하는 과정
+> 2. 테스트 코드 작성법
+>    1) 예상 데이터 작성 
+>    2) 실 데이터 획득
+>    3) 예상 데이터와 실 데이터 비교 검증
+> 3. 테스트 케이스 
+>    * 테스트는 다양한 경우를 대비해 작성하며, 성공할 경우 뿐만아니라 실패할 경우까지 고려해서 작성  
+> 4. 테스트 디렉터리 위치
+>   * src > test > java 디렉터리 위치로 생성됨
+> 5. @SpringBootTest
+>   * 스프링 부트와 해당 클래스를 연동해 테스트할 때 사용하는 어노테이션
+> 6. @Test 
+>   * 해당 메서드가 테스트를 위한 코드라고 선언하는 어노테이션  
+> 7. @Transactional (테스트 케이스의 트랜잭션 처리 어노테이션)
+>   * 테스트를 마치고 데이터를 롤백시 사용하는 어노테이션
+---------------- 
