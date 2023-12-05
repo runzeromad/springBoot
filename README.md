@@ -1768,7 +1768,7 @@ springBoot
      <img src="./src/main/resources/static/img/2023-12-04_day13_03.png" width="300px" alt="springBootProject"></img></br></br> 
 
 3. 소스코드
-    * service/ArticleServiceTest </br>
+    * * /src/test/service/ArticleServiceTest </br>
       ````java
       @SpringBootTest // 해당 클래스를 스프링 부트와 연동해 통합 테스트를 수행하겠다고 선언하는것
       class ArticleServiceTest {
@@ -1851,7 +1851,7 @@ springBoot
       }      
       ````
 4. 셀프 체크
-    * service/ArticleServiceTest </br>
+    * /src/test/service/ArticleServiceTest </br>
     ```java
         @Test
         @Transactional
@@ -1940,4 +1940,135 @@ springBoot
 >   * 해당 메서드가 테스트를 위한 코드라고 선언하는 어노테이션  
 > 7. @Transactional (테스트 케이스의 트랜잭션 처리 어노테이션)
 >   * 테스트를 마치고 데이터를 롤백시 사용하는 어노테이션
----------------- 
+----------------
+### 14. 댓글 엔티티와 리파지터리
+1. 댓글과 계시글의 관계
+    * 일대 다 관계(one to many)
+    * <일대다 : 이미지>
+    * article 테이블과 comment 테이블
+    * <테이블 관계 : 이미지>
+    * 엔티티 : DB 데이터를 담는 자바 객체(엔티티를 기반으로 테이블 생성)
+    * 리파지터리 : 엔티티를 관리하는 인터페이스로, 데이터 CRUD 등의 기능 제공
+    * <엔티티,리파지터리 : 이미지>
+    * PK(대표키) : 자신을 대표하는 속성 id를 제일 많이 씀(동일 테이블 내에서 중복값이 없어야함)
+    * FK(외래 키) : 연관 대상을 가르키는 속성(외래키는 항상 연관된 테이블의 대표키를 가르킨다)
+    * JPA : 자바로 DB에 명령을 내리게 하는 도구로, 객체 지향적으로 다루는 기술
+    * Jpa Repository : JPA에 특화된 여러 기능등을 제공(CRUD, 엔티티를 페이지 단위로 조회 및 정렬하는 기능 등)
+    * <인터페이스 계층 구조 : 이미지>
+    * Repository : 최상위 리파지터리 인터페이스
+    * CurdRepository 및 ListCurdRepository : 엔티티의 CURD 기능 제공
+    * PagingAndSortingRepository 및 ListPagingAndSortingRepository : 엔티티의 페이징 및 정렬 기능 제공
+
+2. 소스코드
+    * entity/Comment.java </br>
+      ```java
+      @Entity // 해당 클래스가 엔티티 임을 선언, 클래스 필드를 바탕으로 DB에 테이블 생성
+      @Getter // 각 필드 값을 조회할 수 있는 getter 메서드 자동 생성
+      @ToString // 모든 필드를 출력할 수 있는 toStrong 매세드 자동생성
+      @AllArgsConstructor // 모든 필드를 매개 변수로 갖는 생성자 자동 생성
+      @NoArgsConstructor // 매개변수가 아예 없는 기본 생성자 자동생성
+      public class Comment {
+        @Id // 대표키 지정
+        @GeneratedValue(strategy = GenerationType.IDENTITY) // 자동으로 1씩 증가
+        private Long id; // 대표키
+        
+        @ManyToOne // Comment 엔티티와 Article 엔티티를 다대일 관계로 설정
+        @JoinColumn(name = "article_id") // 외래키 생성 Article 텐티티의 기본기(id)와 매칭
+        private Article article; // 해당 댓글의 부모 게시글
+        
+        @Column // 해당 필드를 테이블 속성으로 매핑
+        private String body; // 댓글 본문
+        
+        @Column // 해당 필드를 테이블 속성으로 매핑
+        private String nickname; // 댓글 단 사람
+      }
+      ```
+   * repository/CommentRepository.java </br>
+     ```java
+     public interface CommentRepository extends JpaRepository<Comment, Long>{
+        // 특정 게시글의 모든 댓글 조회
+        // 네이티브 쿼리 메소드 : 형식 > @Query(value = "쿼리", nativeQuery = true)
+        @Query(value =
+            "SELECT * " +
+            "from comment " +
+            "where article_id = :articleId",
+            nativeQuery = true
+        ) // value = 에 실행쿼리 작성, where 문의 = 에 :(세미콜론)을 꼭 명시 해줘야함
+        List<Comment> finByArticleId(Long articleId);
+        
+        // 특정 닉네임의 모든 댓글 조회
+        List<Comment> findByNickname(String nickname);
+        // 네이티브 쿼리 XML
+        }     
+     ```      
+    * src/test/repository/CommentRepositoryTest.java </br>
+      ```java
+      @DataJpaTest // 해당클래스를 JPA와 연동해 테스트 하겠다는 선언
+      class CommentRepositoryTest {
+        @Autowired
+        CommentRepository commentRepository;  // 레파지터리 객체 주입
+        @Test
+        @DisplayName("특정 게시글의 모든 댓글 조회 ID기준") // 메서드 명은 그대로 둔채 테스트 이름만 바꾸고 싶을경우
+        void finByArticleId() {
+            // case 1 : 4번 게시글의 모든 댓글 조회
+            {
+                // 1. 입력 데이터 준비
+                Long articleId = 4L;
+                // 2. 실제 데이터
+                List<Comment> comments = commentRepository.finByArticleId(articleId);
+                // 3. 예상 데이터
+                // 부모글 객체 생성
+                Article article = new Article(4L, "당신의 인생영화는?","댓글 고");
+                // 댓글 객체 생성
+                Comment a = new Comment(1L, article, "굿윌헌팅", "park");
+                Comment b = new Comment(2L, article, "아이엠샘", "kim");
+                Comment c = new Comment(3L, article, "쇼생크탈출", "choi");
+                List<Comment> expected = Arrays.asList(a, b, c); // 댓글 합치기
+                // 4. 비교 및 검증
+                assertEquals(expected.toString(), comments.toString(), "4번 글의 모든 댓글 출력!");
+            }
+        }
+      
+        @Test
+        @DisplayName("특정 게시글의 모든 댓글 조회 nickname기준")
+        void findByNickname() {
+            // 1. 입력 데이터 준비
+            String nickname = "park";
+            // 2. 실제 데이터
+            List<Comment> comments = commentRepository.findByNickname(nickname);
+            // 3. 예상 데이터
+            // 댓글 객체 생성
+            Comment a = new Comment(1L, new Article(4L, "당신의 인생영화는?","댓글 고"),"굿윌헌팅", nickname);
+            Comment b = new Comment(4L, new Article(5L, "당신의 소울 푸드는?","댓글 고고"),"치킨", nickname);
+            Comment c = new Comment(7L, new Article(6L, "당신의 취미는?","댓글 고고고"),"조깅", nickname);
+            List<Comment> expected = Arrays.asList(a, b, c); // 댓글 합치기
+    
+            // 4. 비교 및 검증
+            assertEquals(expected.toString(), comments.toString(), "4번 글의 모든 댓글 출력!");
+        }
+      }      
+      ```
+
+> Day 14 정리
+> 1. 일대다 관계, 다대일 관계
+>    * 
+> 2. 대표키와 외래키
+>    *
+> 3. 다대일 관계 설정
+> *
+> 4. @ManyColumn
+>    *
+> 5. Jpa Repository
+>    *
+> 6. 네이티브 쿼리 메서드
+>    *
+> 7. @Query
+>    *
+> 8. 네이티브 쿼리 XML
+>    *
+> 9. orm.xml
+>    *
+> 10. @DataJpaTest
+>    *
+> 11. @DisplayName
+>    *
