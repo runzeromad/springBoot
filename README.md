@@ -1943,18 +1943,19 @@ springBoot
 ----------------
 ### 14. 댓글 엔티티와 리파지터리
 1. 댓글과 계시글의 관계
-    * 일대 다 관계(one to many)
-    * <일대다 : 이미지>
-    * article 테이블과 comment 테이블
-    * <테이블 관계 : 이미지>
+    * 일대 다 관계(one to many)  
+      <img src="./src/main/resources/static/img/2023-12-06_day14_01.png" width="500px" alt="springBootProject"></img></br></br>
+    * article 테이블과 comment 테이블  
+      <img src="./src/main/resources/static/img/2023-12-06_day14_02.png" width="500px" alt="springBootProject"></img></br></br>
     * 엔티티 : DB 데이터를 담는 자바 객체(엔티티를 기반으로 테이블 생성)
-    * 리파지터리 : 엔티티를 관리하는 인터페이스로, 데이터 CRUD 등의 기능 제공
-    * <엔티티,리파지터리 : 이미지>
+    * 리파지터리 : 엔티티를 관리하는 인터페이스로, 데이터 CRUD 등의 기능 제공  
+      <img src="./src/main/resources/static/img/2023-12-06_day14_03.png" width="300px" alt="springBootProject"></img></br></br>
+      <img src="./src/main/resources/static/img/2023-12-06_day14_04.png" width="300px" alt="springBootProject"></img></br></br> 
     * PK(대표키) : 자신을 대표하는 속성 id를 제일 많이 씀(동일 테이블 내에서 중복값이 없어야함)
     * FK(외래 키) : 연관 대상을 가르키는 속성(외래키는 항상 연관된 테이블의 대표키를 가르킨다)
     * JPA : 자바로 DB에 명령을 내리게 하는 도구로, 객체 지향적으로 다루는 기술
-    * Jpa Repository : JPA에 특화된 여러 기능등을 제공(CRUD, 엔티티를 페이지 단위로 조회 및 정렬하는 기능 등)
-    * <인터페이스 계층 구조 : 이미지>
+    * Jpa Repository : JPA에 특화된 여러 기능등을 제공(CRUD, 엔티티를 페이지 단위로 조회 및 정렬하는 기능 등)  
+      <img src="./src/main/resources/static/img/2023-12-06_day14_05.png" width="500px" alt="springBootProject"></img>
     * Repository : 최상위 리파지터리 인터페이스
     * CurdRepository 및 ListCurdRepository : 엔티티의 CURD 기능 제공
     * PagingAndSortingRepository 및 ListPagingAndSortingRepository : 엔티티의 페이징 및 정렬 기능 제공
@@ -2051,24 +2052,49 @@ springBoot
 
 > Day 14 정리
 > 1. 일대다 관계, 다대일 관계
->    * 
+>    * 일대 다 관계 : 한 엔티티의 하나의 데이터가 다른 엔티티의 여러 데이터와 연관될때
+>    * 다대일 관계 : 한 엔티티의 여러 데이터가 다른 엔티티의 한 데이터와 연관될 때
 > 2. 대표키와 외래키
->    *
+>    * PK(대표키) : 엔티티에서 자신을 대표하는 값
+>    * FK(외래키) : 다른 엔티티를 참조할 수 있도록 다른 엔티티의 대표키를 가리키는 값
+>    <img src="./src/main/resources/static/img/2023-12-06_day14_06.png" width="400px" alt="springBootProject"></img></br>
+>    <img src="./src/main/resources/static/img/2023-12-06_day14_07.png" width="400px" alt="springBootProject"></img></br> 
 > 3. 다대일 관계 설정
-> *
+>    * 두 엔티티를 다대일 관계로 설정하려면 대표키와 외래키를 연결 해야 한다. 
+>    * 자식 엔티티에 외래키를 만들어 보모 엔티티의 대표키 값을 갖게 한다.
 > 4. @ManyColumn
->    *
-> 5. Jpa Repository
->    *
-> 6. 네이티브 쿼리 메서드
->    *
-> 7. @Query
->    *
-> 8. 네이티브 쿼리 XML
->    *
-> 9. orm.xml
->    *
-> 10. @DataJpaTest
->    *
-> 11. @DisplayName
->    *
+>    * 두 엔티티를 다대일 관계로 설정하는 어노테이션
+> 5. @JoinColumn
+>    * 해당 엔티티에 외래키를 생성하는 어노테이션 name속성으로 매핑할 외래키 이름을 지정할 수 있음  
+>    * 형식 : @JoinColumn(name="외래키_이름"") 
+> 6. JpaRepository
+>    * ListCrudRepository와 ListPagingAndSortingRepository를 상속받은 인터페이스로 CRUD 기능 뿐만 아니라 엔티티를 페이지 단위로 조회 및 정렬하는 기능과 JPA에 특화된 여러 기능 등을 제공
+> 7. 네이티브 쿼리 메서드
+>    * 리파지터리의 메서드로 쿼리를 작성해 실행하는 것 @Query 어노테이션이나 orm.xml파일을 이용해 만들 수 있음
+> 8. @Query
+>    * SQL과 유사한 JPQL이라는 객체 지햐ㅐㅇ 쿼리 언어를 통해 쿼리를 처리할 수 있도록 지원하는 어노테이션
+>    * 기존의 SQL 문을 그대로 쿼리 언어로 사용하고 싶다면 nativeQuery속성을 true로 설정하면 됨
+>    * 형식 : @Query(value="쿼리", nativeQuery = true)
+> 9. 네이티브 쿼리 XML
+>    * 메서드에서 수행할 쿼리를 XML로 작성한것
+>    * 기본경로 : META-INF 파일이름 : orm.xml (이경로와 이름으로 파일을 만들면 XML이 자동으로 인식된다 )
+> 10. orm.xml
+>    * ````
+>      <named-native-query
+>             name="쿼리 수행 대상 엔티티 메서드 이름"
+>             result-class="쿼리 수행 결과 반환하는 타입의 전체 패키지 경로">
+>           <query>
+>               <![CDATA[
+>                   <!-- 쿼리 -->
+>               ]]>
+>           </query>
+>      </named-native-query>
+>      ````
+> 11. @DataJpaTest
+>    * JPA와 연동한 테스트를 진행하는 어노테이션
+>    * 리파지터리와 엔티티등의 객체를 테스트 코드에서 사용할 수 있다
+> 12. @DisplayName
+>    * 테스트 이름을 붙일때 사용하는 어노테이션
+>    * 메서드 이름은 그대로 둔 채 테스트 이름을 바꾸고 싶을때 사용
+>    * 형식 : @DisplayName("테스트 결과에 보여줄 이름")
+------- 
