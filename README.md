@@ -2098,3 +2098,206 @@ springBoot
 >    * 메서드 이름은 그대로 둔 채 테스트 이름을 바꾸고 싶을때 사용
 >    * 형식 : @DisplayName("테스트 결과에 보여줄 이름")
 ------- 
+### 15. 댓글 컨트롤러와 서비스 
+1. 댓글 REST API 
+    * REST 컨트롤러 : 댓글 REST API를 위한 컨트롤러로 서비스와 협업, 클라이언트 요청을 받아 응답하여 데이터 반환
+    * 서비스 : REST 컨트롤러와 리파지터리 사이에서 비즈니스 로직을 담당하며 예외 상황이 발생했을때 @Transaction로 변경된 데이터를 롤백
+    * DTO : 사용자에게 보여 줄 댓글 정보를 담은것 (클라이언트와 서버 간에 댓글 JSON 데이터 전송)
+      <img src="./src/main/resources/static/img/2023-12-07_day15_01.png" width="500px" alt="springBootProject"></img></br></br> 
+    * 엔티티 : DB데이터를 담는 자바 객체로 엔티티를 기반으로 테이블 생성, 리파지터리가 DB속 데이터를 조회하거나 전달할 때 사용
+    * 리파지터리 : 엔티티를 관리하는 인터페이스로 데이터 CRUD 등의 기능 제공, 서비스로 부터 댓글 CRUD 등의 명령을 받아 DB에 보내고 응답 받음
+      <img src="./src/main/resources/static/img/2023-12-07_day15_02.png" width="500px" alt="springBootProject"></img></br></br>
+    * 실습 후 완성될 프로젝트 구조   
+      <img src="./src/main/resources/static/img/2023-12-07_day15_03.png" width="500px" alt="springBootProject"></img></br></br>
+
+2. 소스코드
+    * /api/CommentApiController.java </br>
+      ```java
+      @RestController
+      public class CommentApiController {
+        @Autowired
+        private CommentService commentService;
+            // 1. 댓글 조회
+            @GetMapping("/api/articles/{articleId}/comments")
+            public ResponseEntity<List<CommentDto>> comments(@PathVariable Long articleId){
+                // 서비스에 위임
+                List<CommentDto> dtos = commentService.comments(articleId);
+                // 결과 응답
+                return ResponseEntity.status(HttpStatus.OK).body(dtos);
+            }
+        
+            // 2. 댓글 생성
+            @PostMapping("/api/articles/{articleId}/comments")
+            public ResponseEntity<CommentDto> create(@PathVariable Long articleId, @RequestBody CommentDto dto){ // @RequestBody어노테이션은 HTTP요청에 실린 내용(json, xml, yaml등)을 자바 객체로 변환해줌
+                // 서비스에 위임
+                CommentDto createdDto = commentService.create(articleId, dto); // 부모ID : articleId, 생성데이터 : dto
+                // 결과 응답
+                return ResponseEntity.status(HttpStatus.OK).body(createdDto);
+            }
+        
+            // 3. 댓글 수정
+            @PatchMapping("/api/articles/comments/{id}")
+            public ResponseEntity<CommentDto> update(@PathVariable Long id, @RequestBody CommentDto dto){
+                // 서비스에 위임
+                CommentDto updateDto = commentService.update(id, dto);
+                // 결과 응답
+                return  ResponseEntity.status(HttpStatus.OK).body(updateDto);
+            }
+        
+            // 4. 댓글 삭제
+            @DeleteMapping("/api/articles/comments/{id}")
+            public ResponseEntity<CommentDto> delete(@PathVariable Long id){
+                // 서비스에 위임
+                CommentDto deleteDto = commentService.delete(id);
+                // 결과 응답
+                return ResponseEntity.status(HttpStatus.OK).body(deleteDto);
+        }
+      
+      }      
+      ```
+   * /dto/CommentDto.java </br>
+     ```java
+     @AllArgsConstructor
+     @NoArgsConstructor
+     @Getter
+     @ToString
+     public class CommentDto {
+        private Long id; // 댓글의 id
+        private Long articleId; // 댓글의 부모 id
+        private String nickname; // 댓글 작성자
+        private String body; // 댓글 본문
+     
+        public static CommentDto createCommentDto(Comment comment) {
+            return new CommentDto(
+                   comment.getId(),
+                   comment.getArticle().getId(),
+                   comment.getNickname(),
+                   comment.getBody()
+            );
+        }
+     }
+     ```
+   * /entity/Comment.java </br>
+     ```java
+     public static Comment createComment(CommentDto dto, Article article) {
+        // 예외 발생
+        if(dto.getId() != null)
+        throw  new IllegalArgumentException("댓글 생성 실패! 댓글의 id가 없어야 합니다.");
+     
+        if(dto.getArticleId() != article.getId())
+        throw new IllegalArgumentException("댓글 생성 실패! 게시글의 id가 잘못됐습니다.");
+     
+        // 엔티티 생성 및 반환
+        return new Comment(
+               dto.getId(), // 댓글 id
+               article, // 보모 게시글
+               dto.getNickname(), // 댓글 닉네임
+               dto.getBody() // 댓글 본문
+        );
+     }
+  
+     public void patch(CommentDto dto) {
+        // 예외 발생
+        if(this.id != dto.getId())
+        throw new IllegalArgumentException("댓글 수정 실패! 잘못된 id가 입력됐습니다.");
+     
+        // 객체 갱신
+        if(dto.getNickname() != null)
+        this.nickname = dto.getNickname(); // 내용 반영
+     
+        if(dto.getBody() != null)
+        this.body = dto.getBody(); // 내용 반영
+     }
+     ```
+   * /service/CommentService.java </br>
+     ```java
+     @Service
+     public class CommentService {
+         @Autowired
+         private CommentRepository commentRepository;
+         @Autowired
+         private ArticleRepository articleRepository;
+     
+         public List<CommentDto> comments(Long articleId) {
+             // 1. 댓글 조회
+             // articleId에 해당하는 모든 댓글을 가져와 엔티티의 List<Comment> comments에 담는다
+             List<Comment> comments = commentRepository.findByArticleId(articleId);
+             // 2. 엔티티 -> DTO변환
+             // 새로운 객체(ArrayList<CommentDto>()) 를 생성하여 List<CommentDto> dtos에 담는다
+             List<CommentDto> dtos = new ArrayList<CommentDto>();
+     
+             /* for 문법
+             for (int i = 0; i < comments.size(); i++) { // 조회 댓글 엔티티 수만큼 반복하기
+                 Comment c =comments.get(i); // 조회한 댓글 엔티티 하나씩 자져오기
+                 CommentDto dto = CommentDto.createCommentDto(c); // 엔티티를 DTO로 변환
+                 dtos.add(dto); // 변환한 DTO를 dtos 리스트에 삽입
+             }
+             // 3. 결과 변환
+             return dtos;
+             */
+     
+             // stream 문법
+             // 3. 결과반환
+             return commentRepository.findByArticleId(articleId)
+                     .stream() // stream() : 컬렉션이나 리스트에 저장된 요소들을 하나씩 참조하며 반복 처리할 때 사용
+                     .map(comment -> CommentDto.createCommentDto(comment)) // 스트림화한 댓글 엔티티 목록을 DTO로 변환(map 매서드 이용) : .map(a->b) 스트림의 각요소 a를 꺼내 b를 수행한 결과로 매빙 
+                     .collect(Collectors.toList()); // 스트림 데이터를 동일한 리스트 데이터로 형변환
+                     // collect() : 메서드의 반환형을 변경할수 있다
+         }
+     
+         @Transactional
+         public CommentDto create(Long articleId, CommentDto dto) {
+             // 1. 게시글 조회 및 예외 발생
+             Article article = articleRepository.findById(articleId).orElseThrow(() -> new IllegalArgumentException("댓글 생성 실패! 대상 게시글이 없습니다."));
+             // orElseThrow() : Optional 객체로 값이 존재하면 그 값을 반환하고, 값이 존재하지 않으면 전달값으로 보낸 예외를 발생시키는 메서드
+             // IllegalArgumentException : 클래스로 메서드가 잘못됐거나 부적합한 전달 값을 보냈음을 나타냄
+     
+             // 2. 댓글 엔티티 생성
+             Comment comment = Comment.createComment(dto, article);
+             // 3. 댓글 엔티티를 DB에 저장
+             Comment created = commentRepository.save(comment);
+             // 4. DTO로 변환해 변환
+             return  CommentDto.createCommentDto(created);
+         }
+     
+         @Transactional
+         public CommentDto update(Long id, CommentDto dto) {
+             // 1. 댓글 조회 및 예외 발생
+             Comment target = commentRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("댓글 수정 실패! 대상 댓글이 없습니다."));
+             // 2. 댓글 수정
+             target.patch(dto);
+             // 3. DB로 갱신
+             Comment updated = commentRepository.save(target);
+             // 4. 댓글 엔티티를 DTO로 변환 및 반환
+             return CommentDto.createCommentDto(updated);
+         }
+     
+         public CommentDto delete(Long id) {
+             // 1. 댓글 조회 및 예외 발생
+             Comment target = commentRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("댓글 삭제 실패! 삭제 댓글이 없습니다."));
+             // 2. DB 데이터 삭제
+             commentRepository.delete(target);
+             return CommentDto.createCommentDto(target);
+         }
+     }     
+     ```
+> Day 15 정리
+> 1댓글(comment)의 메서드
+>    * createComment() : 댓글 생성하는 메서드
+>      + dto와 article을 입력받아 새 댓글 엔티티를 반환함
+>      + 정적(static)메서드이므로 갹체 생성 없이 '클래스이름.메서드이름(매개변수)'로 호출한다.
+>    * pathc() : 댓글을 수정하는 메서드
+>      + 기존 댓글 엔티티에 입력 받은 dto를 반영해 갱신, 비정적(non-static) 메서드이므로 주체 객체가 있어야만 호출할 수 있다
+> 2스트림(stream)
+>    * 컬렉션이나 리스트에 저장된 요소들을 하나씩 참조하며 반복해서 처리할 때 사용
+>    * for() 문을 사용하지 않고도 깔끔하고 직관적이게 코드를 변경할 수 있음
+>    * 주요특징 3가지
+>      + 원본 데이터를 읽기만 하고 변경하지 않는다.
+>      + 정렬된 결과를 컬렉션이나 배열에 담아 반환할 수 있다.
+>      + 내부 반복문으로, 반복문이 코드상에 노출되지 않는다.
+> 3. @JsonProperty
+>    * JSON 데이터의 키(key)와 이를 받아 저장하는 DTO 필드의 변수명이 다를 경우 사용
+>    * DTO 필드 위에 @JsonPRoperty("키_이름")을 작성해 주면 해당 키와 변수가 자동으로 매핑됨
+> 4. orElseThrow()
+>    * Optional 객체에 값이 존재하면 그 값을 반환하고, 값이 존재하지 않으면 전달 값으로 보낸 예외를 발생시키는 메서드 
+>    * 전달값으로 IllegalArgumentException 클래스를 사용하면 메서드가 잘못됐거나 부적합한 전달 값을 보냈음을 나타냄
