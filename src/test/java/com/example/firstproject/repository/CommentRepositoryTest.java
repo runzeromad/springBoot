@@ -24,7 +24,7 @@ class CommentRepositoryTest {
             // 1. 입력 데이터 준비
             Long articleId = 4L;
             // 2. 실제 데이터
-            List<Comment> comments = commentRepository.finByArticleId(articleId);
+            List<Comment> comments = commentRepository.findByArticleId(articleId);
             // 3. 예상 데이터
             // 부모글 객체 생성
             Article article = new Article(4L, "당신의 인생영화는?","댓글 고");

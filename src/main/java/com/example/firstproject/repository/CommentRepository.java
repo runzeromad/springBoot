@@ -15,7 +15,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long>{
             "where article_id = :articleId",
             nativeQuery = true
     ) // value = 에 실행쿼리 작성, where 문의 = 에 :(세미콜론)을 꼭 명시 해줘야함
-    List<Comment> finByArticleId(Long articleId);
+    List<Comment> findByArticleId(Long articleId);
 
     // 특정 닉네임의 모든 댓글 조회
     List<Comment> findByNickname(String nickname);
