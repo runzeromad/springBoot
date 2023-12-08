@@ -2281,6 +2281,61 @@ springBoot
          }
      }     
      ```
+
+3. 셀프 체크
+    * /api/PizzaApiController.java </br>
+      ```java
+      @Slf4j
+      @RestController
+      public class PizzaApiController {
+         @Autowired
+         private PizzaService pizzaService;
+         @GetMapping("/api/pizza")
+         public List<Pizza> index(){
+             return pizzaService.index();
+         }
+      }            
+      ``` 
+    * /entity/Pizza.java </br>
+      ```java
+      @AllArgsConstructor
+      @NoArgsConstructor
+      @ToString
+      @Entity
+      @Getter
+      public class Pizza {
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private  Long id;
+      
+              @Column
+            private String name;
+      
+            @Column
+            private String price;
+      }      
+      ```
+   * /service </br>
+     ```java
+     @Slf4j
+     @Service
+     public class PizzaService {
+        @Autowired
+        private PizzaRepository pizzaRepository;
+        public List<Pizza> index(){
+             return pizzaRepository.findAll();
+        }
+     
+     }     
+     ```        
+    * /repository/PizzaRepository.java </br>
+      ```java
+      public interface PizzaRepository extends CrudRepository <Pizza, Long>{
+        @Override
+        ArrayList<Pizza> findAll();
+      
+      }      
+      ``` 
 > Day 15 정리
 > 1댓글(comment)의 메서드
 >    * createComment() : 댓글 생성하는 메서드
