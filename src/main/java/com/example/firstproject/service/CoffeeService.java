@@ -49,6 +49,7 @@ public class CoffeeService {
 
         // 4. 업데이트
         target.patch(coffee);
+        System.out.println(target);
         Coffee updated = coffeeRepository.save(target);
         return updated;
     }

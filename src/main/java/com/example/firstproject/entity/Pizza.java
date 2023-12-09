@@ -22,4 +22,14 @@ public class Pizza {
     @Column
     private String price;
 
+    public void patch(Pizza pizza){
+        System.out.println(pizza.name);
+        System.out.println(pizza.price);
+
+        if(pizza.name != null)
+            this.name = pizza.name;
+        if(pizza.price != null)
+            this.price = pizza.price;
+
+    }
 }
