@@ -2288,13 +2288,49 @@ springBoot
       @Slf4j
       @RestController
       public class PizzaApiController {
-         @Autowired
-         private PizzaService pizzaService;
-         @GetMapping("/api/pizza")
-         public List<Pizza> index(){
-             return pizzaService.index();
-         }
-      }            
+        @Autowired
+        private PizzaService pizzaService;
+        // GET 모든 데이터 조회
+        @GetMapping("/api/pizza")
+        public List<Pizza> index(){
+            return pizzaService.index();
+        }
+      
+        // GET 단일 데이터 조회
+        @GetMapping("/api/pizza/{id}")
+        public Pizza show(@PathVariable Long id){
+            return pizzaService.show(id);
+        }
+      
+        // POST : 데이터 작성
+        @PostMapping("/api/pizza")
+        public ResponseEntity<Pizza> create(@RequestBody PizzaForm dto){
+            Pizza created = pizzaService.create(dto);
+            return (created != null) ?
+                    ResponseEntity.status(HttpStatus.OK).body(created) :
+                    ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+      
+        // PATCH : 데이터 수정
+        @PatchMapping("/api/pizza/{id}")
+        public ResponseEntity<Pizza> update(@PathVariable Long id,@RequestBody PizzaForm dto){
+            Pizza updated = pizzaService.update(id, dto);
+            return (updated != null) ?
+                    ResponseEntity.status(HttpStatus.OK).body(updated) :
+                    ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+      
+        }
+      
+        // DELETE : 데이터 삭제
+        @DeleteMapping("/api/pizza/{id}")
+        public ResponseEntity<Article> delete(@PathVariable Long id){
+            Pizza deleted = pizzaService.delete(id);
+            return (deleted == null) ?
+                    ResponseEntity.status(HttpStatus.NO_CONTENT).build() :
+                    ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+      
+      }
       ``` 
     * /entity/Pizza.java </br>
       ```java
@@ -2307,13 +2343,21 @@ springBoot
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         private  Long id;
+        @Column
+        private String name;
+        @Column
+        private String price;
       
-              @Column
-            private String name;
+        public void patch(Pizza pizza){
+            System.out.println(pizza.name);
+            System.out.println(pizza.price);
       
-            @Column
-            private String price;
-      }      
+            if(pizza.name != null)
+                this.name = pizza.name;
+            if(pizza.price != null)
+                this.price = pizza.price;
+        }
+      }
       ```
    * /service </br>
      ```java
@@ -2322,20 +2366,69 @@ springBoot
      public class PizzaService {
         @Autowired
         private PizzaRepository pizzaRepository;
-        public List<Pizza> index(){
-             return pizzaRepository.findAll();
+        
+            public List<Pizza> index(){
+                return pizzaRepository.findAll();
+            }
+        
+            public Pizza show(Long id){
+                return pizzaRepository.findById(id).orElse(null);
+            }
+        
+            public Pizza create(PizzaForm dto){
+                Pizza pizza = dto.toEntity();
+                if(pizza.getId() != null){
+                    return null;
+                }
+        
+                return pizzaRepository.save(pizza);
+            }
+        
+            public Pizza update(Long id, PizzaForm dto){
+                Pizza pizza = dto.toEntity();
+                Pizza target = pizzaRepository.findById(id).orElse(null);
+        
+                if(target == null || id != pizza.getId()){
+                    return null;
+                }
+        
+                target.patch(pizza);
+                Pizza updated = pizzaRepository.save(target);
+                return updated;
+            }
+        
+            public Pizza delete(Long id){
+                Pizza target = pizzaRepository.findById(id).orElse(null);
+                if(target == null){
+                    return null;
+                }
+                pizzaRepository.delete(target);
+                return target;
+            }
         }
-     
-     }     
-     ```        
-    * /repository/PizzaRepository.java </br>
-      ```java
-      public interface PizzaRepository extends CrudRepository <Pizza, Long>{
-        @Override
-        ArrayList<Pizza> findAll();
-      
-      }      
+     ```
+             
+   * /repository/PizzaRepository.java </br>
+     ```java
+           public interface PizzaRepository extends CrudRepository <Pizza, Long>{
+             @Override
+             ArrayList<Pizza> findAll();
+           
+           }      
       ``` 
+   * /dto/PizzaForm.java </br>
+     ```java
+     @AllArgsConstructor
+     @ToString
+     public class PizzaForm {
+         private Long id;
+         private String name;
+         private String price;
+         public Pizza toEntity(){
+             return new Pizza(id, name, price);
+         }
+     }     
+     ```          
 > Day 15 정리
 > 1댓글(comment)의 메서드
 >    * createComment() : 댓글 생성하는 메서드
