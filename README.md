@@ -1756,11 +1756,11 @@ springBoot
    1. 예상 데이터 작성  
    2. 실제 데이터 획득  
    3. 예상 데이터와 실제 데이터 비교 검증하기    
-   * 테스트 방식의 진화  
+   * 테스트 방식의 진화</br>
    <img src="./src/main/resources/static/img/2023-12-04_day13_01.png" width="500px" alt="springBootProject"></img></br></br>
-   * 테스트 실행과 결과 처리 
+   * 테스트 실행과 결과 처리</br>
    <img src="./src/main/resources/static/img/2023-12-04_day13_02.png" width="500px" alt="springBootProject"></img></br></br>
-   * 테스트 케이스  
+   * 테스트 케이스</br>
      <img src="./src/main/resources/static/img/2023-12-04_day13_04.png" width="300px" alt="springBootProject"></img></br></br>
 2. TDD : 테스트 주도개발(Test Driven Development)  
    * 테스트를 통한 코드 검증과 리팩터링  
@@ -2105,7 +2105,7 @@ springBoot
     * DTO : 사용자에게 보여 줄 댓글 정보를 담은것 (클라이언트와 서버 간에 댓글 JSON 데이터 전송)
       <img src="./src/main/resources/static/img/2023-12-07_day15_01.png" width="500px" alt="springBootProject"></img></br></br> 
     * 엔티티 : DB데이터를 담는 자바 객체로 엔티티를 기반으로 테이블 생성, 리파지터리가 DB속 데이터를 조회하거나 전달할 때 사용
-    * 리파지터리 : 엔티티를 관리하는 인터페이스로 데이터 CRUD 등의 기능 제공, 서비스로 부터 댓글 CRUD 등의 명령을 받아 DB에 보내고 응답 받음
+    * 리파지터리 : 엔티티를 관리하는 인터페이스로 데이터 CRUD 등의 기능 제공, 서비스로 부터 댓글 CRUD 등의 명령을 받아 DB에 보내고 응답 받음</br>
       <img src="./src/main/resources/static/img/2023-12-07_day15_02.png" width="500px" alt="springBootProject"></img></br></br>
     * 실습 후 완성될 프로젝트 구조   
       <img src="./src/main/resources/static/img/2023-12-07_day15_03.png" width="500px" alt="springBootProject"></img></br></br>
@@ -2449,3 +2449,66 @@ springBoot
 > 4. orElseThrow()
 >    * Optional 객체에 값이 존재하면 그 값을 반환하고, 값이 존재하지 않으면 전달 값으로 보낸 예외를 발생시키는 메서드 
 >    * 전달값으로 IllegalArgumentException 클래스를 사용하면 메서드가 잘못됐거나 부적합한 전달 값을 보냈음을 나타냄
+-------
+### 16. 댓글목록 보기
+1. 댓글 레이아웃 및 파일 구성
+    * 뷰 영역 : _comments.mustache (댓글 영역을 보여줌)
+    * 리스트 영역 : _list.mustache (댓글 목록을 보여줌)
+    * 생성 역역 : _new.mustache (댓글 생성 영역)
+    * DTO : 사용자에게 보여 줄 댓글 정보를 담은것 (클라이언트와 서버 간에 댓글 JSON 데이터 전송)
+2. {{#commentDtos}} {{/commentDtos}}
+    * {{#commentDtos}}부터 {{/commentDtos}}까지 범위 내에서 commentDtos 데이터를 사용할 수 있으며 commentDtos 데이터 수만큼 해당 범위를 반복한다
+
+3. 소스코드
+    * controller/ArticleController.java </br>
+      ```java
+      @Autowired
+      private CommentService commentService;
+      
+      // VIEW
+      @GetMapping("/articles/{id}") // 데이터 조회 요청 접수
+      public String show(@PathVariable Long id, Model model){ // 매개변수로 id 받아오기 {id} --> id
+      // @PathVariable URL 요청으로 들어온 전달값을 컨트롤러의 매개변수로 가져오는 어노테이션
+        log.info("id = " + id);
+   
+           // 1. id 조회해서 데이터 가져오기
+           Article articleEntity = articleRepository.findById(id).orElse(null); // orElse(null) : id값이 없을경우 null을 반환한다는 의미
+           List<CommentDto> commentDtos = commentService.comments(id); // comment 조회
+   
+           // 2. 모델에 데이터 등록하기 (model 객체 : 생성한 데이터를 담아서 View로 전달할 때 사용하는 객체) / (articleEntity데이터를 View로 전달)
+           model.addAttribute("article", articleEntity); // attributeName의 "article"는 articles/show.mustache파일에서 사용됨
+           model.addAttribute("commentDtos", commentDtos); // comment 모델
+   
+           // 3. 뷰 페이지에 반환하기
+           return "articles/show";
+      }
+      ```
+   * /templates/comments/_list.mustache </br>
+     ```html
+        <div id="comment-list">
+            {{#commentDtos}}
+                <div class="card m-2" id="comments-{{id}}">
+                    <div class="card-header">
+                        {{nickname}}
+                    </div>
+                    <div class="card-body">
+                        {{body}}
+                    </div>
+                </div>
+            {{/commentDtos}}
+        </div>
+     ```
+   * /templates/comments/_comments.mustache </br>
+     ```html
+        <div>
+            <!--댓글 목록 보기-->
+            {{>comments/_list}}
+            <!--새 댓글 작성하기-->
+            {{>comments/_new}}
+        </div>
+     ```      
+   * /templates/articles/show.mustache </br>
+     ```html
+     {{>comments/_comments}} <!-- comment 영역 추가-->
+     {{>layouts/footer}}
+     ```
