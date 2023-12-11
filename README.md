@@ -2455,7 +2455,7 @@ springBoot
     * 뷰 영역 : _comments.mustache (댓글 영역을 보여줌)
     * 리스트 영역 : _list.mustache (댓글 목록을 보여줌)
     * 생성 역역 : _new.mustache (댓글 생성 영역)
-    * DTO : 사용자에게 보여 줄 댓글 정보를 담은것 (클라이언트와 서버 간에 댓글 JSON 데이터 전송)
+
 2. {{#commentDtos}} {{/commentDtos}}
     * {{#commentDtos}}부터 {{/commentDtos}}까지 범위 내에서 commentDtos 데이터를 사용할 수 있으며 commentDtos 데이터 수만큼 해당 범위를 반복한다
 
