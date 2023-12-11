@@ -1,8 +1,10 @@
 package com.example.firstproject.controller;
 
 import com.example.firstproject.dto.ArticleForm;
+import com.example.firstproject.dto.CommentDto;
 import com.example.firstproject.entity.Article;
 import com.example.firstproject.repository.ArticleRepository;
+import com.example.firstproject.service.CommentService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -19,6 +21,8 @@ import java.util.List;
 public class ArticleController {
     @Autowired // 스프링 부트가 미리 생성해 놓은 리파지터리 객체 주입
     private ArticleRepository articleRepository;  // articleRepository 객체 선언 private 임으로 articleRepository는 ArticleController 클래스에서만 사용 가능하다
+    @Autowired
+    private CommentService commentService;
 
     // Write
     @GetMapping("/articles/new")
@@ -52,9 +56,11 @@ public class ArticleController {
 
         // 1. id 조회해서 데이터 가져오기
         Article articleEntity = articleRepository.findById(id).orElse(null); // orElse(null) : id값이 없을경우 null을 반환한다는 의미
+        List<CommentDto> commentDtos = commentService.comments(id); // comment 조회
 
         // 2. 모델에 데이터 등록하기 (model 객체 : 생성한 데이터를 담아서 View로 전달할 때 사용하는 객체) / (articleEntity데이터를 View로 전달)
         model.addAttribute("article", articleEntity); // attributeName의 "article"는 articles/show.mustache파일에서 사용됨
+        model.addAttribute("commentDtos", commentDtos); // comment 모델
 
         // 3. 뷰 페이지에 반환하기
         return "articles/show";
