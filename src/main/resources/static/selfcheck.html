@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <H1>Hello, <span id="target">World</span>!</H1>
+    <input type="text" id="text-input" />
+    <button id="send-btn">전송</button>
+</body>
+<script>
+{
+    // 셀프 체크
+    const  sendBtn = document.querySelector("#send-btn");
+    sendBtn.addEventListener("click", function (){
+        const textValue = document.querySelector("#text-input").value;
+        document.getElementById("target").innerText = textValue;
+        }
+    );
+}
+</script>
+</html>
