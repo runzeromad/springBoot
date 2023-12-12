@@ -2512,3 +2512,105 @@ springBoot
      {{>comments/_comments}} <!-- comment 영역 추가-->
      {{>layouts/footer}}
      ```
+----------
+### 16. 댓글목록 보기
+1. 자바스크립트를 이용한 REST API 호출 및 응답 처리하기
+   * 자바스크립트 patch()함수를 사용한 REST API 호출 예시문 
+    ```javascript
+    fetch(url,{
+        method : "POST", // 요청메서드(GET, POST, PATCH, DELETE)
+        headers:{        // 헤더 정보
+            "Content-Type" : "application/json" // json타입
+        },
+        body:JSON.stringify(객체) // 전송 테이터
+    }).then(response=>{          // 응답받아 처리하는 구문
+        // 응답처리문 로직
+    });   
+    ```
+2. 셀프 체크
+    * /static/selfcheck.html</br>
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Title</title>
+    </head>
+    <body>
+        <H1>Hello, <span id="target">World</span>!</H1>
+        <input type="text" id="text-input" />
+        <button id="send-btn">전송</button>
+    </body>
+    <script>
+    {
+        // 셀프 체크
+        const  sendBtn = document.querySelector("#send-btn");
+        sendBtn.addEventListener("click", function (){
+            const textValue = document.querySelector("#text-input").value;
+            document.getElementById("target").innerText = textValue;
+            }
+        );
+    }
+    </script>
+    </html>
+    ```  
+3. 소스코드
+    * /templates/comments/_new.mustache </br>
+      ```html
+      <div class="card m-2" id="comments-new">
+          <div class="card">
+              <div class="card-body">
+              <!-- 댓글 작성폼 -->
+                  <form>
+                      <div class="mb-3">
+                          <label for="exampleInputEmail1" class="form-label">닉 네임</label>
+                          <input type="text" class="form-control" id="new-comment-nickname">
+                      </div>
+                      <div class="mb-3">
+                          <label for="exampleInputPassword1" class="form-label">댓글 내용</label>
+                          <textarea type="text" class="form-control" rows="3" id="new-comment-body"></textarea>
+                      </div>
+                      {{#article}}
+                      <input type="hidden" id="new-comment-article-id" value="{{id}}">
+                      {{/article}}
+                      <!-- 전송버튼 -->
+                      <button type="button" class="btn btn-primary" id="comment-create-btn">댓글 작성</button>
+                  </form>
+                  <!-- // 댓글작성폼-->
+              </div>
+          </div>
+      </div>
+      <script>
+      {
+          const commentCreateBtn = document.querySelector("#comment-create-btn");
+          commentCreateBtn.addEventListener("click", function() {
+              // 새 댓글 객체 생성
+              const comment = {
+                  // 새 댓글 닉네임
+                  nickname : document.querySelector("#new-comment-nickname").value,
+                  // 새 댓글 본문
+                  body: document.querySelector("#new-comment-body").value,
+                  // 부모 게시글 id
+                  articleId: document.querySelector("#new-comment-article-id").value,
+              };
+              console.log(comment);
+              // fetch() - 비동기 통신을 위한 api
+              const url = "/api/articles/" + comment.articleId + "/comments";
+              fetch(url,{
+                  method : "POST", // POST요청
+                  headers:{
+                      "Content-Type" : "application/json" // json타입
+                  },
+                  body:JSON.stringify(comment) // comment 객체를 JSON 문자열로 변환해 전송
+              }).then(response=>{
+                  const msg = (response.ok) ? "댓글이 등록됐습니다." : "댓글 등록 실패..!";
+                  alert(msg);
+                  window.location.reload();
+              });
+          });
+      }
+      </script>  
+      ```
+-----
+
+   
