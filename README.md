@@ -2617,5 +2617,108 @@ springBoot
     * 모달 기능을 이용해 모달 창에 수정 폼 만들기
     * 모달 트리거 버튼을 통해 기존 댓글을 가져와 수정 폼에 반영한 후 REST API요청하기
 2. 댓글 수정하기
-
-   
+    * 모달 트리거 버튼에 수정할 댓글 정보를 data-* 속성값으로 저장
+    * show.bs.modal 이벤트를 감지해 핸들러에서 모달 트리거 버튼을 변수(triggerBtn)화한다.
+    * 버튼변수(triggerBtn)를 이용해 data-* 속성에 담긴 댓글 정보를 가져온다
+    * 수정 폼에 데이터를 반영한다
+3. 모달 이벤트 감지
+    * 모달이 열리기 직전 show.bs.modal 이벤트를 발생시키고 이를 처리할 함수는 발생한 이벤트를 첫번째 매개 변수로 받아 실행함
+    * 형식 : 요소명.addEventListener("show.bs.modal", function()event{});
+4. 소스코드
+    * /templates/comments/_new.mustache </br>
+      ```html
+         <!-- Button trigger modal -->
+         <button type="button" class="btn btn-sm btn-outline-primary"
+                 data-bs-toggle="modal"
+                 data-bs-target="#comment-edit-modal"
+                 data-bs-id="{{id}}"
+                 data-bs-nickname="{{nickname}}"
+                 data-bs-body="{{body}}"
+                 data-bs-article-id="{{articleId}}"
+         >
+         수정
+         </button>
+             Launch demo modal
+         </button>      
+      ```
+      ```html
+       <!-- Modal -->
+       <div class="modal fade" id="comment-edit-modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+           <div class="modal-dialog">
+               <div class="modal-content">
+                   <div class="modal-header">
+                       <h5 class="modal-title" id="exampleModalLabel">댓글 수정</h5>
+                       <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                   </div>
+                   <div class="modal-body">
+                       <!-- 댓글수정폼 -->
+                       <form>
+                           <div class="mb-3">
+                               <label for="exampleInputEmail1" class="form-label">닉 네임</label>
+                               <input type="text" class="form-control" id="edit-comment-nickname">
+                           </div>
+                           <div class="mb-3">
+                               <label for="exampleInputPassword1" class="form-label">댓글 내용</label>
+                               <textarea type="text" class="form-control" rows="3" id="edit-comment-body"></textarea>
+                           </div>
+                           <input type="hidden" id="edit-comment-id">
+                           <input type="hidden" id="edit-comment-article-id">
+                           <!-- 전송버튼 -->
+                           <button type="button" class="btn btn-primary" id="comment-update-btn">수정 완료</button>
+                       </form>
+                       <!-- //댓글수정폼 -->
+                   </div>
+               </div>
+           </div>
+       </div>
+       <script>
+       {
+           // 모달 요소 선택
+           const commentEditModal = document.querySelector("#comment-edit-modal");
+           // 모달 이벤트 감지
+           commentEditModal.addEventListener("show.bs.modal", function (event){
+               // 1. 트리거 버튼 선택
+               const triggerBtn = event.relatedTarget;
+               // 2. 데이터 가져오기
+               const id = triggerBtn.getAttribute("data-bs-id");
+               const nickname = triggerBtn.getAttribute("data-bs-nickname");
+               const body = triggerBtn.getAttribute("data-bs-body");
+               const articleId = triggerBtn.getAttribute("data-bs-article-id");
+               // 3. 수정 폼에 데이터 반영
+               document.querySelector("#edit-comment-id").value = id;
+               document.querySelector("#edit-comment-nickname").value = nickname;
+               document.querySelector("#edit-comment-body").value = body;
+               document.querySelector("#edit-comment-article-id").value = articleId;
+           });
+       }
+       {
+           // 수정 완료 버튼 선택
+           const commentUpdateBtn = document.querySelector("#comment-update-btn");
+           // 클릭이벤트 처리
+           commentUpdateBtn.addEventListener("click",function () {
+               // 수정 댓글 객체 생성
+               const comment ={
+                   id : document.querySelector("#edit-comment-id").value,
+                   nickname : document.querySelector("#edit-comment-nickname").value,
+                   body : document.querySelector("#edit-comment-body").value,
+                   articleId : document.querySelector("#edit-comment-article-id").value
+               }
+               // console.log(comment);
+               const url = "/api/articles/comments/" + comment.id;
+               fetch(url, {
+                   method : "PATCH",
+                   headers : {
+                       "Content-Type" : "application/json"
+                   },
+                   body : JSON.stringify(comment)
+               }).then(response => {
+                   // HTTP 응답 코드에 따른 메시지 출력
+                   const msg = (response.ok) ? "댓글이 수정됐습니다." : "댓글 수정 실패..!";
+                   alert(msg);
+                   window.location.reload();
+               });
+           });
+       }
+       </script>      
+      ```
+-----
