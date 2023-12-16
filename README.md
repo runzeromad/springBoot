@@ -2612,7 +2612,7 @@ springBoot
       </script>  
       ```
 -----
-### 17. 댓글 수정하기
+### 18. 댓글 수정하기
 1. 댓글 수정하기
     * 모달 기능을 이용해 모달 창에 수정 폼 만들기
     * 모달 트리거 버튼을 통해 기존 댓글을 가져와 수정 폼에 반영한 후 REST API요청하기
@@ -2722,3 +2722,69 @@ springBoot
        </script>      
       ```
 -----
+### 19. 댓글 삭제하기
+1. 댓글 삭제하기
+    * [삭제]버튼 추가하기, [삭제]버튼 클릭해 REST API요청 보내기
+2. javascript
+    * querySelectorAll : 선택자로 지정한 모든 요소를 찾아 반환 
+   ``` javascript
+   querySelectorAll("CSS_선택자_문법")
+   ```
+    * forEach : 배열 또는 유사한 일련의 데이터 묵ㄲ음 을 순회해 처리하는 메서드로, 매개변수로 주어진 함수를 배역 속 각 요소에 적용해 처리
+   ``` javascript
+   forEach(function(){
+   실행문
+   });
+   ```
+3. 백틱 문자열
+    * 백틱( ` ) : 문자열을 정의하는 방법으로 문자열 사이에 변수를 편리하게 삽입할 수 있다.
+    * 변수 삽입 문법은 ${}를 사용
+   ``` javascript
+    const x = "한우";
+    const buger = `${x} 버거`; // "한우 버거"
+   ```
+4. 소스코드
+    * /templates/comments/_new.mustache </br>
+      ```html
+      <button type="button"
+              class="btn btn-sm btn-outline-danger comment-delete-btn"
+              data-comment-id="{{id}}"
+      >
+      삭제
+      </button> 
+      ``` 
+      ```javascript
+      <script>      
+      {
+          // 삭제버튼 선택
+          const commentDeleteBtns = document.querySelectorAll(".comment-delete-btn");
+          // 각 버튼의 이벤트 처리
+          commentDeleteBtns.forEach(btn => {
+              btn.addEventListener("click", (event) => {
+                  // 이벤트 발생 요소 선택
+                  const commentDeleteBtn = event.target;
+                  // 삭제 댓글 id 가져오기
+                  const commentId = commentDeleteBtn.getAttribute("data-comment-id");
+                  console.log(`삭제 버튼 클릭: ${commentId}번댓글`);
+                  const url = `/api/articles/comments/${commentId}`;
+                  fetch(url, {
+                      method: "DELETE"
+                  }).then(response=>{
+                      // 댓글삭제처리
+                      if(!response.ok){
+                          alert("댓글 삭제 실패..!");
+                          return;
+                      }
+                      // 삭제 성공 시 댓글을 화면에서 지우고 메시지 창 띄우기
+                      const target = document.querySelector(`#comments-${commentId}`);
+                      target.remove();
+                      const msg = `${commentId}번 댓글을 삭제했습니다.`;
+                      alert(msg);
+                      // 현재 페이지 새로 고침
+                      window.location.reload();
+                  });
+              });
+          });
+      }
+      </script>      
+      ```      
